@@ -1,0 +1,1374 @@
+[
+  {
+    "id": "http://arxiv.org/abs/2509.16189v1",
+    "arxiv_id": "2509.16189v1",
+    "title": "Latent learning: episodic memory complements parametric learning by enabling flexible reuse of experiences",
+    "abstract": "When do machine learning systems fail to generalize, and what mechanisms\ncould improve their generalization? Here, we draw inspiration from cognitive\nscience to argue that one weakness of machine learning systems is their failure\nto exhibit latent learning -- learning information that is not relevant to the\ntask at hand, but that might be useful in a future task. We show how this\nperspective links failures ranging from the reversal curse in language modeling\nto new findings on agent-based navigation. We then highlight how cognitive\nscience points to episodic memory as a potential part of the solution to these\nissues. Correspondingly, we show that a system with an oracle retrieval\nmechanism can use learning experiences more flexibly to generalize better\nacross many of these challenges. We also identify some of the essential\ncomponents for effectively using retrieval, including the importance of\nwithin-example in-context learning for acquiring the ability to use information\nacross retrieved examples. In summary, our results illustrate one possible\ncontributor to the relative data inefficiency of current machine learning\nsystems compared to natural intelligence, and help to understand how retrieval\nmethods can complement parametric learning to improve generalization.",
+    "authors": [
+      "Andrew Kyle Lampinen",
+      "Martin Engelcke",
+      "Yuxuan Li",
+      "Arslan Chaudhry",
+      "James L. McClelland"
+    ],
+    "published_date": "2025-09-19T17:49:25+00:00",
+    "updated_date": "2025-09-19T17:49:25+00:00",
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.16189v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15908v1",
+    "arxiv_id": "2509.15908v1",
+    "title": "An Equivariant Graph Network for Interpretable Nanoporous Materials Design",
+    "abstract": "Nanoporous materials hold promise for diverse sustainable applications, yet\ntheir vast chemical space poses challenges for efficient design. Machine\nlearning offers a compelling pathway to accelerate the exploration, but\nexisting models lack either interpretability or fidelity for elucidating the\ncorrelation between crystal geometry and property. Here, we report a\nthree-dimensional periodic space sampling method that decomposes large\nnanoporous structures into local geometrical sites for combined property\nprediction and site-wise contribution quantification. Trained with a\nconstructed database and retrieved datasets, our model achieves\nstate-of-the-art accuracy and data efficiency for property prediction on gas\nstorage, separation, and electrical conduction. Meanwhile, this approach\nenables the interpretation of the prediction and allows for accurate\nidentification of significant local sites for targeted properties. Through\nidentifying transferable high-performance sites across diverse nanoporous\nframeworks, our model paves the way for interpretable, symmetry-aware\nnanoporous materials design, which is extensible to other materials, like\nmolecular crystals and beyond.",
+    "authors": [
+      "Zhenhao Zhou",
+      "Salman Bin Kashif",
+      "Dawei Feng",
+      "Jin-Hu Dou",
+      "Kaihang Shi",
+      "Tao Deng",
+      "Zhenpeng Yao"
+    ],
+    "published_date": "2025-09-19T12:04:26+00:00",
+    "updated_date": "2025-09-19T12:04:26+00:00",
+    "categories": [
+      "cond-mat.mtrl-sci",
+      "cs.AI"
+    ],
+    "primary_category": "cond-mat.mtrl-sci",
+    "pdf_url": "http://arxiv.org/pdf/2509.15908v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15767v1",
+    "arxiv_id": "2509.15767v1",
+    "title": "Learning to Optimize Capacity Planning in Semiconductor Manufacturing",
+    "abstract": "In manufacturing, capacity planning is the process of allocating production\nresources in accordance with variable demand. The current industry practice in\nsemiconductor manufacturing typically applies heuristic rules to prioritize\nactions, such as future change lists that account for incoming machine and\nrecipe dedications. However, while offering interpretability, heuristics cannot\neasily account for the complex interactions along the process flow that can\ngradually lead to the formation of bottlenecks. Here, we present a neural\nnetwork-based model for capacity planning on the level of individual machines,\ntrained using deep reinforcement learning. By representing the policy using a\nheterogeneous graph neural network, the model directly captures the diverse\nrelationships among machines and processing steps, allowing for proactive\ndecision-making. We describe several measures taken to achieve sufficient\nscalability to tackle the vast space of possible machine-level actions.\n  Our evaluation results cover Intel's small-scale Minifab model and\npreliminary experiments using the popular SMT2020 testbed. In the largest\ntested scenario, our trained policy increases throughput and decreases cycle\ntime by about 1.8% each.",
+    "authors": [
+      "Philipp Andelfinger",
+      "Jieyi Bi",
+      "Qiuyu Zhu",
+      "Jianan Zhou",
+      "Bo Zhang",
+      "Fei Fei Zhang",
+      "Chew Wye Chan",
+      "Boon Ping Gan",
+      "Wentong Cai",
+      "Jie Zhang"
+    ],
+    "published_date": "2025-09-19T08:51:10+00:00",
+    "updated_date": "2025-09-19T08:51:10+00:00",
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.15767v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15751v1",
+    "arxiv_id": "2509.15751v1",
+    "title": "Simulated Cortical Magnification Supports Self-Supervised Object Learning",
+    "abstract": "Recent self-supervised learning models simulate the development of semantic\nobject representations by training on visual experience similar to that of\ntoddlers. However, these models ignore the foveated nature of human vision with\nhigh/low resolution in the center/periphery of the visual field. Here, we\ninvestigate the role of this varying resolution in the development of object\nrepresentations. We leverage two datasets of egocentric videos that capture the\nvisual experience of humans during interactions with objects. We apply models\nof human foveation and cortical magnification to modify these inputs, such that\nthe visual content becomes less distinct towards the periphery. The resulting\nsequences are used to train two bio-inspired self-supervised learning models\nthat implement a time-based learning objective. Our results show that modeling\naspects of foveated vision improves the quality of the learned object\nrepresentations in this setting. Our analysis suggests that this improvement\ncomes from making objects appear bigger and inducing a better trade-off between\ncentral and peripheral visual information. Overall, this work takes a step\ntowards making models of humans' learning of visual representations more\nrealistic and performant.",
+    "authors": [
+      "Zhengyang Yu",
+      "Arthur Aubret",
+      "Chen Yu",
+      "Jochen Triesch"
+    ],
+    "published_date": "2025-09-19T08:28:06+00:00",
+    "updated_date": "2025-09-19T08:28:06+00:00",
+    "categories": [
+      "cs.CV"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.15751v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15482v1",
+    "arxiv_id": "2509.15482v1",
+    "title": "Comparing Computational Pathology Foundation Models using Representational Similarity Analysis",
+    "abstract": "Foundation models are increasingly developed in computational pathology\n(CPath) given their promise in facilitating many downstream tasks. While recent\nstudies have evaluated task performance across models, less is known about the\nstructure and variability of their learned representations. Here, we\nsystematically analyze the representational spaces of six CPath foundation\nmodels using techniques popularized in computational neuroscience. The models\nanalyzed span vision-language contrastive learning (CONCH, PLIP, KEEP) and\nself-distillation (UNI (v2), Virchow (v2), Prov-GigaPath) approaches. Through\nrepresentational similarity analysis using H&E image patches from TCGA, we find\nthat UNI2 and Virchow2 have the most distinct representational structures,\nwhereas Prov-Gigapath has the highest average similarity across models. Having\nthe same training paradigm (vision-only vs. vision-language) did not guarantee\nhigher representational similarity. The representations of all models showed a\nhigh slide-dependence, but relatively low disease-dependence. Stain\nnormalization decreased slide-dependence for all models by a range of 5.5%\n(CONCH) to 20.5% (PLIP). In terms of intrinsic dimensionality, vision-language\nmodels demonstrated relatively compact representations, compared to the more\ndistributed representations of vision-only models. These findings highlight\nopportunities to improve robustness to slide-specific features, inform model\nensembling strategies, and provide insights into how training paradigms shape\nmodel representations. Our framework is extendable across medical imaging\ndomains, where probing the internal representations of foundation models can\nhelp ensure effective development and deployment.",
+    "authors": [
+      "Vaibhav Mishra",
+      "William Lotter"
+    ],
+    "published_date": "2025-09-18T23:01:13+00:00",
+    "updated_date": "2025-09-18T23:01:13+00:00",
+    "categories": [
+      "cs.CV",
+      "cs.AI"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.15482v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15429v1",
+    "arxiv_id": "2509.15429v1",
+    "title": "Random Matrix Theory-guided sparse PCA for single-cell RNA-seq data",
+    "abstract": "Single-cell RNA-seq provides detailed molecular snapshots of individual cells\nbut is notoriously noisy. Variability stems from biological differences, PCR\namplification bias, limited sequencing depth, and low capture efficiency,\nmaking it challenging to adapt computational pipelines to heterogeneous\ndatasets or evolving technologies. As a result, most studies still rely on\nprincipal component analysis (PCA) for dimensionality reduction, valued for its\ninterpretability and robustness. Here, we improve upon PCA with a Random Matrix\nTheory (RMT)-based approach that guides the inference of sparse principal\ncomponents using existing sparse PCA algorithms. We first introduce a novel\nbiwhitening method, inspired by the Sinkhorn-Knopp algorithm, that\nsimultaneously stabilizes variance across genes and cells. This enables the use\nof an RMT-based criterion to automatically select the sparsity level, rendering\nsparse PCA nearly parameter-free. Our mathematically grounded approach retains\nthe interpretability of PCA while enabling robust, hands-off inference of\nsparse principal components. Across seven single-cell RNA-seq technologies and\nfour sparse PCA algorithms, we show that this method systematically improves\nthe reconstruction of the principal subspace and consistently outperforms PCA-,\nautoencoder-, and diffusion-based methods in cell-type classification tasks.",
+    "authors": [
+      "Victor Chardès"
+    ],
+    "published_date": "2025-09-18T21:08:38+00:00",
+    "updated_date": "2025-09-18T21:08:38+00:00",
+    "categories": [
+      "cs.LG",
+      "physics.bio-ph",
+      "q-bio.QM"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.15429v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15368v1",
+    "arxiv_id": "2509.15368v1",
+    "title": "Stochastic Sample Approximations of (Local) Moduli of Continuity",
+    "abstract": "Modulus of local continuity is used to evaluate the robustness of neural\nnetworks and fairness of their repeated uses in closed-loop models. Here, we\nrevisit a connection between generalized derivatives and moduli of local\ncontinuity, and present a non-uniform stochastic sample approximation for\nmoduli of local continuity. This is of importance in studying robustness of\nneural networks and fairness of their repeated uses.",
+    "authors": [
+      "Rodion Nazarov",
+      "Allen Gehret",
+      "Robert Shorten",
+      "Jakub Marecek"
+    ],
+    "published_date": "2025-09-18T19:13:33+00:00",
+    "updated_date": "2025-09-18T19:13:33+00:00",
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.15368v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15349v1",
+    "arxiv_id": "2509.15349v1",
+    "title": "Probabilistic Conformal Coverage Guarantees in Small-Data Settings",
+    "abstract": "Conformal prediction provides distribution-free prediction sets with\nguaranteed marginal coverage. However, in split conformal prediction this\nguarantee is training-conditional only in expectation: across many calibration\ndraws, the average coverage equals the nominal level, but the realized coverage\nfor a single calibration set may vary substantially. This variance undermines\neffective risk control in practical applications. Here we introduce the Small\nSample Beta Correction (SSBC), a plug-and-play adjustment to the conformal\nsignificance level that leverages the exact finite-sample distribution of\nconformal coverage to provide probabilistic guarantees, ensuring that with\nuser-defined probability over the calibration draw, the deployed predictor\nachieves at least the desired coverage.",
+    "authors": [
+      "Petrus H. Zwart"
+    ],
+    "published_date": "2025-09-18T18:41:50+00:00",
+    "updated_date": "2025-09-18T18:41:50+00:00",
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.15349v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15333v1",
+    "arxiv_id": "2509.15333v1",
+    "title": "Emulating Human-like Adaptive Vision for Efficient and Flexible Machine Visual Perception",
+    "abstract": "Human vision is highly adaptive, efficiently sampling intricate environments\nby sequentially fixating on task-relevant regions. In contrast, prevailing\nmachine vision models passively process entire scenes at once, resulting in\nexcessive resource demands scaling with spatial-temporal input resolution and\nmodel size, yielding critical limitations impeding both future advancements and\nreal-world application. Here we introduce AdaptiveNN, a general framework\naiming to drive a paradigm shift from 'passive' to 'active, adaptive' vision\nmodels. AdaptiveNN formulates visual perception as a coarse-to-fine sequential\ndecision-making process, progressively identifying and attending to regions\npertinent to the task, incrementally combining information across fixations,\nand actively concluding observation when sufficient. We establish a theory\nintegrating representation learning with self-rewarding reinforcement learning,\nenabling end-to-end training of the non-differentiable AdaptiveNN without\nadditional supervision on fixation locations. We assess AdaptiveNN on 17\nbenchmarks spanning 9 tasks, including large-scale visual recognition,\nfine-grained discrimination, visual search, processing images from real driving\nand medical scenarios, language-driven embodied AI, and side-by-side\ncomparisons with humans. AdaptiveNN achieves up to 28x inference cost reduction\nwithout sacrificing accuracy, flexibly adapts to varying task demands and\nresource budgets without retraining, and provides enhanced interpretability via\nits fixation patterns, demonstrating a promising avenue toward efficient,\nflexible, and interpretable computer vision. Furthermore, AdaptiveNN exhibits\nclosely human-like perceptual behaviors in many cases, revealing its potential\nas a valuable tool for investigating visual cognition. Code is available at\nhttps://github.com/LeapLabTHU/AdaptiveNN.",
+    "authors": [
+      "Yulin Wang",
+      "Yang Yue",
+      "Yang Yue",
+      "Huanqian Wang",
+      "Haojun Jiang",
+      "Yizeng Han",
+      "Zanlin Ni",
+      "Yifan Pu",
+      "Minglei Shi",
+      "Rui Lu",
+      "Qisen Yang",
+      "Andrew Zhao",
+      "Zhuofan Xia",
+      "Shiji Song",
+      "Gao Huang"
+    ],
+    "published_date": "2025-09-18T18:25:43+00:00",
+    "updated_date": "2025-09-18T18:25:43+00:00",
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.LG",
+      "eess.IV"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.15333v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15328v1",
+    "arxiv_id": "2509.15328v1",
+    "title": "Kuramoto Orientation Diffusion Models",
+    "abstract": "Orientation-rich images, such as fingerprints and textures, often exhibit\ncoherent angular directional patterns that are challenging to model using\nstandard generative approaches based on isotropic Euclidean diffusion.\nMotivated by the role of phase synchronization in biological systems, we\npropose a score-based generative model built on periodic domains by leveraging\nstochastic Kuramoto dynamics in the diffusion process. In neural and physical\nsystems, Kuramoto models capture synchronization phenomena across coupled\noscillators -- a behavior that we re-purpose here as an inductive bias for\nstructured image generation. In our framework, the forward process performs\n\\textit{synchronization} among phase variables through globally or locally\ncoupled oscillator interactions and attraction to a global reference phase,\ngradually collapsing the data into a low-entropy von Mises distribution. The\nreverse process then performs \\textit{desynchronization}, generating diverse\npatterns by reversing the dynamics with a learned score function. This approach\nenables structured destruction during forward diffusion and a hierarchical\ngeneration process that progressively refines global coherence into fine-scale\ndetails. We implement wrapped Gaussian transition kernels and periodicity-aware\nnetworks to account for the circular geometry. Our method achieves competitive\nresults on general image benchmarks and significantly improves generation\nquality on orientation-dense datasets like fingerprints and textures.\nUltimately, this work demonstrates the promise of biologically inspired\nsynchronization dynamics as structured priors in generative modeling.",
+    "authors": [
+      "Yue Song",
+      "T. Anderson Keller",
+      "Sevan Brodjian",
+      "Takeru Miyato",
+      "Yisong Yue",
+      "Pietro Perona",
+      "Max Welling"
+    ],
+    "published_date": "2025-09-18T18:18:49+00:00",
+    "updated_date": "2025-09-18T18:18:49+00:00",
+    "categories": [
+      "cs.LG",
+      "cs.CV",
+      "q-bio.NC"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.15328v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15193v1",
+    "arxiv_id": "2509.15193v1",
+    "title": "TITAN: A Trajectory-Informed Technique for Adaptive Parameter Freezing in Large-Scale VQE",
+    "abstract": "Variational quantum Eigensolver (VQE) is a leading candidate for harnessing\nquantum computers to advance quantum chemistry and materials simulations, yet\nits training efficiency deteriorates rapidly for large Hamiltonians. Two issues\nunderlie this bottleneck: (i) the no-cloning theorem imposes a linear growth in\ncircuit evaluations with the number of parameters per gradient step; and (ii)\ndeeper circuits encounter barren plateaus (BPs), leading to exponentially\nincreasing measurement overheads. To address these challenges, here we propose\na deep learning framework, dubbed Titan, which identifies and freezes inactive\nparameters of a given ansatze at initialization for a specific class of\nHamiltonians, reducing the optimization overhead without sacrificing accuracy.\nThe motivation of Titan starts with our empirical findings that a subset of\nparameters consistently has a negligible influence on training dynamics. Its\ndesign combines a theoretically grounded data construction strategy, ensuring\neach training example is informative and BP-resilient, with an adaptive neural\narchitecture that generalizes across ansatze of varying sizes. Across benchmark\ntransverse-field Ising models, Heisenberg models, and multiple molecule systems\nup to 30 qubits, Titan achieves up to 3 times faster convergence and 40% to 60%\nfewer circuit evaluations than state-of-the-art baselines, while matching or\nsurpassing their estimation accuracy. By proactively trimming parameter space,\nTitan lowers hardware demands and offers a scalable path toward utilizing VQE\nto advance practical quantum chemistry and materials science.",
+    "authors": [
+      "Yifeng Peng",
+      "Xinyi Li",
+      "Samuel Yen-Chi Chen",
+      "Kaining Zhang",
+      "Zhiding Liang",
+      "Ying Wang",
+      "Yuxuan Du"
+    ],
+    "published_date": "2025-09-18T17:50:02+00:00",
+    "updated_date": "2025-09-18T17:50:02+00:00",
+    "categories": [
+      "quant-ph",
+      "cs.AI"
+    ],
+    "primary_category": "quant-ph",
+    "pdf_url": "http://arxiv.org/pdf/2509.15193v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15124v1",
+    "arxiv_id": "2509.15124v1",
+    "title": "Learning Mechanistic Subtypes of Neurodegeneration with a Physics-Informed Variational Autoencoder Mixture Model",
+    "abstract": "Modelling the underlying mechanisms of neurodegenerative diseases demands\nmethods that capture heterogeneous and spatially varying dynamics from sparse,\nhigh-dimensional neuroimaging data. Integrating partial differential equation\n(PDE) based physics knowledge with machine learning provides enhanced\ninterpretability and utility over classic numerical methods. However, current\nphysics-integrated machine learning methods are limited to considering a single\nPDE, severely limiting their application to diseases where multiple mechanisms\nare responsible for different groups (i.e., subtypes) and aggravating problems\nwith model misspecification and degeneracy. Here, we present a deep generative\nmodel for learning mixtures of latent dynamic models governed by physics-based\nPDEs, going beyond traditional approaches that assume a single PDE structure.\nOur method integrates reaction-diffusion PDEs within a variational autoencoder\n(VAE) mixture model framework, supporting inference of subtypes of\ninterpretable latent variables (e.g. diffusivity and reaction rates) from\nneuroimaging data. We evaluate our method on synthetic benchmarks and\ndemonstrate its potential for uncovering mechanistic subtypes of Alzheimer's\ndisease progression from positron emission tomography (PET) data.",
+    "authors": [
+      "Sanduni Pinnawala",
+      "Annabelle Hartanto",
+      "Ivor J. A. Simpson",
+      "Peter A. Wijeratne"
+    ],
+    "published_date": "2025-09-18T16:29:45+00:00",
+    "updated_date": "2025-09-18T16:29:45+00:00",
+    "categories": [
+      "eess.IV",
+      "cs.CV",
+      "cs.LG"
+    ],
+    "primary_category": "eess.IV",
+    "pdf_url": "http://arxiv.org/pdf/2509.15124v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15026v1",
+    "arxiv_id": "2509.15026v1",
+    "title": "Undersampled Phase Retrieval with Image Priors",
+    "abstract": "Phase retrieval seeks to recover a complex signal from amplitude-only\nmeasurements, a challenging nonlinear inverse problem. Current theory and\nalgorithms often ignore signal priors. By contrast, we evaluate here a variety\nof image priors in the context of severe undersampling with structured random\nFourier measurements. Our results show that those priors significantly improve\nreconstruction, allowing accurate reconstruction even below the weak recovery\nthreshold.",
+    "authors": [
+      "Stanislas Ducotterd",
+      "Zhiyuan Hu",
+      "Michael Unser",
+      "Jonathan Dong"
+    ],
+    "published_date": "2025-09-18T14:51:56+00:00",
+    "updated_date": "2025-09-18T14:51:56+00:00",
+    "categories": [
+      "eess.IV",
+      "cs.LG"
+    ],
+    "primary_category": "eess.IV",
+    "pdf_url": "http://arxiv.org/pdf/2509.15026v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.14961v1",
+    "arxiv_id": "2509.14961v1",
+    "title": "Towards universal property prediction in Cartesian space: TACE is all you need",
+    "abstract": "Machine learning has revolutionized atomistic simulations and materials\nscience, yet current approaches often depend on spherical-harmonic\nrepresentations. Here we introduce the Tensor Atomic Cluster Expansion and\nTensor Moment Potential, the first unified framework formulated entirely in\nCartesian space for the systematic prediction of arbitrary structure-determined\ntensorial properties. TACE achieves this by decomposing atomic environments\ninto a complete hierarchy of (irreducible) Cartesian tensors, ensuring\nsymmetry-consistent representations that naturally encode invariance and\nequivariance constraints. Beyond geometry, TACE incorporates universal\nembeddings that flexibly integrate diverse attributes including basis sets,\ncharges, magnetic moments and field perturbations. This allows explicit control\nover external invariants and equivariants in the prediction process. Long-range\ninteractions are also accurately described through the Latent Ewald Summation\nmodule within the short-range approximation, providing a rigorous yet\ncomputationally efficient treatment of electrostatic interactions. We\ndemonstrate that TACE attains accuracy, stability, and efficiency on par with\nor surpassing leading equivariant frameworks across finite molecules and\nextended materials, including in-domain and out-of-domain benchmarks, spectra,\nhessians, external-field response, charged systems, magnetic systems,\nmulti-fidelity training, and heterogeneous catalytic systems. Crucially, TACE\nbridges scalar and tensorial modeling and establishes a Cartesian-space\nparadigm that unifies and extends beyond the design space of\nspherical-harmonic-based methods. This work lays the foundation for a new\ngeneration of universal atomistic machine learning models capable of\nsystematically capturing the rich interplay of geometry, fields and material\nproperties within a single coherent framework.",
+    "authors": [
+      "Zemin Xu",
+      "Wenbo Xie",
+      "Daiqian Xie",
+      "P. Hu"
+    ],
+    "published_date": "2025-09-18T13:51:07+00:00",
+    "updated_date": "2025-09-18T13:51:07+00:00",
+    "categories": [
+      "stat.ML",
+      "cond-mat.mtrl-sci",
+      "cs.LG",
+      "physics.chem-ph"
+    ],
+    "primary_category": "stat.ML",
+    "pdf_url": "http://arxiv.org/pdf/2509.14961v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.14912v1",
+    "arxiv_id": "2509.14912v1",
+    "title": "Back to Ear: Perceptually Driven High Fidelity Music Reconstruction",
+    "abstract": "Variational Autoencoders (VAEs) are essential for large-scale audio tasks\nlike diffusion-based generation. However, existing open-source models often\nneglect auditory perceptual aspects during training, leading to weaknesses in\nphase accuracy and stereophonic spatial representation. To address these\nchallenges, we propose {\\epsilon}ar-VAE, an open-source music signal\nreconstruction model that rethinks and optimizes the VAE training paradigm. Our\ncontributions are threefold: (i) A K-weighting perceptual filter applied prior\nto loss calculation to align the objective with auditory perception. (ii) Two\nnovel phase losses: a Correlation Loss for stereo coherence, and a Phase Loss\nusing its derivatives--Instantaneous Frequency and Group Delay--for precision.\n(iii) A new spectral supervision paradigm where magnitude is supervised by all\nfour Mid/Side/Left/Right components, while phase is supervised only by the LR\ncomponents. Experiments show {\\epsilon}ar-VAE at 44.1kHz substantially\noutperforms leading open-source models across diverse metrics, showing\nparticular strength in reconstructing high-frequency harmonics and the spatial\ncharacteristics.",
+    "authors": [
+      "Kangdi Wang",
+      "Zhiyue Wu",
+      "Dinghao Zhou",
+      "Rui Lin",
+      "Junyu Dai",
+      "Tao Jiang"
+    ],
+    "published_date": "2025-09-18T12:41:34+00:00",
+    "updated_date": "2025-09-18T12:41:34+00:00",
+    "categories": [
+      "cs.SD",
+      "cs.AI"
+    ],
+    "primary_category": "cs.SD",
+    "pdf_url": "http://arxiv.org/pdf/2509.14912v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.14872v1",
+    "arxiv_id": "2509.14872v1",
+    "title": "Temporal Representation Learning of Phenotype Trajectories for pCR Prediction in Breast Cancer",
+    "abstract": "Effective therapy decisions require models that predict the individual\nresponse to treatment. This is challenging since the progression of disease and\nresponse to treatment vary substantially across patients. Here, we propose to\nlearn a representation of the early dynamics of treatment response from imaging\ndata to predict pathological complete response (pCR) in breast cancer patients\nundergoing neoadjuvant chemotherapy (NACT). The longitudinal change in magnetic\nresonance imaging (MRI) data of the breast forms trajectories in the latent\nspace, serving as basis for prediction of successful response. The multi-task\nmodel represents appearance, fosters temporal continuity and accounts for the\ncomparably high heterogeneity in the non-responder cohort.In experiments on the\npublicly available ISPY-2 dataset, a linear classifier in the latent trajectory\nspace achieves a balanced accuracy of 0.761 using only pre-treatment data (T0),\n0.811 using early response (T0 + T1), and 0.861 using four imaging time points\n(T0 -> T3). The code will be made available upon paper acceptance.",
+    "authors": [
+      "Ivana Janíčková",
+      "Yen Y. Tan",
+      "Thomas H. Helbich",
+      "Konstantin Miloserdov",
+      "Zsuzsanna Bago-Horvath",
+      "Ulrike Heber",
+      "Georg Langs"
+    ],
+    "published_date": "2025-09-18T11:37:27+00:00",
+    "updated_date": "2025-09-18T11:37:27+00:00",
+    "categories": [
+      "cs.CV"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.14872v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15260v1",
+    "arxiv_id": "2509.15260v1",
+    "title": "Toxicity Red-Teaming: Benchmarking LLM Safety in Singapore's Low-Resource Languages",
+    "abstract": "The advancement of Large Language Models (LLMs) has transformed natural\nlanguage processing; however, their safety mechanisms remain under-explored in\nlow-resource, multilingual settings. Here, we aim to bridge this gap. In\nparticular, we introduce \\textsf{SGToxicGuard}, a novel dataset and evaluation\nframework for benchmarking LLM safety in Singapore's diverse linguistic\ncontext, including Singlish, Chinese, Malay, and Tamil. SGToxicGuard adopts a\nred-teaming approach to systematically probe LLM vulnerabilities in three\nreal-world scenarios: \\textit{conversation}, \\textit{question-answering}, and\n\\textit{content composition}. We conduct extensive experiments with\nstate-of-the-art multilingual LLMs, and the results uncover critical gaps in\ntheir safety guardrails. By offering actionable insights into cultural\nsensitivity and toxicity mitigation, we lay the foundation for safer and more\ninclusive AI systems in linguistically diverse environments.\\footnote{Link to\nthe dataset: https://github.com/Social-AI-Studio/SGToxicGuard.}\n\\textcolor{red}{Disclaimer: This paper contains sensitive content that may be\ndisturbing to some readers.}",
+    "authors": [
+      "Yujia Hu",
+      "Ming Shan Hee",
+      "Preslav Nakov",
+      "Roy Ka-Wei Lee"
+    ],
+    "published_date": "2025-09-18T08:14:34+00:00",
+    "updated_date": "2025-09-18T08:14:34+00:00",
+    "categories": [
+      "cs.CL"
+    ],
+    "primary_category": "cs.CL",
+    "pdf_url": "http://arxiv.org/pdf/2509.15260v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.14225v1",
+    "arxiv_id": "2509.14225v1",
+    "title": "Defending Diffusion Models Against Membership Inference Attacks via Higher-Order Langevin Dynamics",
+    "abstract": "Recent advances in generative artificial intelligence applications have\nraised new data security concerns. This paper focuses on defending diffusion\nmodels against membership inference attacks. This type of attack occurs when\nthe attacker can determine if a certain data point was used to train the model.\nAlthough diffusion models are intrinsically more resistant to membership\ninference attacks than other generative models, they are still susceptible. The\ndefense proposed here utilizes critically-damped higher-order Langevin\ndynamics, which introduces several auxiliary variables and a joint diffusion\nprocess along these variables. The idea is that the presence of auxiliary\nvariables mixes external randomness that helps to corrupt sensitive input data\nearlier on in the diffusion process. This concept is theoretically investigated\nand validated on a toy dataset and a speech dataset using the Area Under the\nReceiver Operating Characteristic (AUROC) curves and the FID metric.",
+    "authors": [
+      "Benjamin Sterling",
+      "Yousef El-Laham",
+      "Mónica F. Bugallo"
+    ],
+    "published_date": "2025-09-17T17:56:20+00:00",
+    "updated_date": "2025-09-17T17:56:20+00:00",
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.14225v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.14129v1",
+    "arxiv_id": "2509.14129v1",
+    "title": "Breaking the Cycle of Incarceration With Targeted Mental Health Outreach: A Case Study in Machine Learning for Public Policy",
+    "abstract": "Many incarcerated individuals face significant and complex challenges,\nincluding mental illness, substance dependence, and homelessness, yet jails and\nprisons are often poorly equipped to address these needs. With little support\nfrom the existing criminal justice system, these needs can remain untreated and\nworsen, often leading to further offenses and a cycle of incarceration with\nadverse outcomes both for the individual and for public safety, with\nparticularly large impacts on communities of color that continue to widen the\nalready extensive racial disparities in criminal justice outcomes. Responding\nto these failures, a growing number of criminal justice stakeholders are\nseeking to break this cycle through innovative approaches such as\ncommunity-driven and alternative approaches to policing, mentoring, community\nbuilding, restorative justice, pretrial diversion, holistic defense, and social\nservice connections. Here we report on a collaboration between Johnson County,\nKansas, and Carnegie Mellon University to perform targeted, proactive mental\nhealth outreach in an effort to reduce reincarceration rates.\n  This paper describes the data used, our predictive modeling approach and\nresults, as well as the design and analysis of a field trial conducted to\nconfirm our model's predictive power, evaluate the impact of this targeted\noutreach, and understand at what level of reincarceration risk outreach might\nbe most effective. Through this trial, we find that our model is highly\npredictive of new jail bookings, with more than half of individuals in the\ntrial's highest-risk group returning to jail in the following year. Outreach\nwas most effective among these highest-risk individuals, with impacts on mental\nhealth utilization, EMS dispatches, and criminal justice involvement.",
+    "authors": [
+      "Kit T. Rodolfa",
+      "Erika Salomon",
+      "Jin Yao",
+      "Steve Yoder",
+      "Robert Sullivan",
+      "Kevin McGuire",
+      "Allie Dickinson",
+      "Rob MacDougall",
+      "Brian Seidler",
+      "Christina Sung",
+      "Claire Herdeman",
+      "Rayid Ghani"
+    ],
+    "published_date": "2025-09-17T16:10:13+00:00",
+    "updated_date": "2025-09-17T16:10:13+00:00",
+    "categories": [
+      "cs.LG",
+      "cs.CY"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.14129v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.13821v1",
+    "arxiv_id": "2509.13821v1",
+    "title": "Learning Minimal Representations of Many-Body Physics from Snapshots of a Quantum Simulator",
+    "abstract": "Analog quantum simulators provide access to many-body dynamics beyond the\nreach of classical computation. However, extracting physical insights from\nexperimental data is often hindered by measurement noise, limited observables,\nand incomplete knowledge of the underlying microscopic model. Here, we develop\na machine learning approach based on a variational autoencoder (VAE) to analyze\ninterference measurements of tunnel-coupled one-dimensional Bose gases, which\nrealize the sine-Gordon quantum field theory. Trained in an unsupervised\nmanner, the VAE learns a minimal latent representation that strongly correlates\nwith the equilibrium control parameter of the system. Applied to\nnon-equilibrium protocols, the latent space uncovers signatures of frozen-in\nsolitons following rapid cooling, and reveals anomalous post-quench dynamics\nnot captured by conventional correlation-based methods. These results\ndemonstrate that generative models can extract physically interpretable\nvariables directly from noisy and sparse experimental data, providing\ncomplementary probes of equilibrium and non-equilibrium physics in quantum\nsimulators. More broadly, our work highlights how machine learning can\nsupplement established field-theoretical techniques, paving the way for\nscalable, data-driven discovery in quantum many-body systems.",
+    "authors": [
+      "Frederik Møller",
+      "Gabriel Fernández-Fernández",
+      "Thomas Schweigler",
+      "Paulin de Schoulepnikoff",
+      "Jörg Schmiedmayer",
+      "Gorka Muñoz-Gil"
+    ],
+    "published_date": "2025-09-17T08:38:46+00:00",
+    "updated_date": "2025-09-17T08:38:46+00:00",
+    "categories": [
+      "quant-ph",
+      "cs.LG"
+    ],
+    "primary_category": "quant-ph",
+    "pdf_url": "http://arxiv.org/pdf/2509.13821v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.13706v1",
+    "arxiv_id": "2509.13706v1",
+    "title": "Automated Triaging and Transfer Learning of Incident Learning Safety Reports Using Large Language Representational Models",
+    "abstract": "PURPOSE: Incident reports are an important tool for safety and quality\nimprovement in healthcare, but manual review is time-consuming and requires\nsubject matter expertise. Here we present a natural language processing (NLP)\nscreening tool to detect high-severity incident reports in radiation oncology\nacross two institutions.\n  METHODS AND MATERIALS: We used two text datasets to train and evaluate our\nNLP models: 7,094 reports from our institution (Inst.), and 571 from IAEA\nSAFRON (SF), all of which had severity scores labeled by clinical content\nexperts. We trained and evaluated two types of models: baseline support vector\nmachines (SVM) and BlueBERT which is a large language model pretrained on\nPubMed abstracts and hospitalized patient data. We assessed for\ngeneralizability of our model in two ways. First, we evaluated models trained\nusing Inst.-train on SF-test. Second, we trained a BlueBERT_TRANSFER model that\nwas first fine-tuned on Inst.-train then on SF-train before testing on SF-test\nset. To further analyze model performance, we also examined a subset of 59\nreports from our Inst. dataset, which were manually edited for clarity.\n  RESULTS Classification performance on the Inst. test achieved AUROC 0.82\nusing SVM and 0.81 using BlueBERT. Without cross-institution transfer learning,\nperformance on the SF test was limited to an AUROC of 0.42 using SVM and 0.56\nusing BlueBERT. BlueBERT_TRANSFER, which was fine-tuned on both datasets,\nimproved the performance on SF test to AUROC 0.78. Performance of SVM, and\nBlueBERT_TRANSFER models on the manually curated Inst. reports (AUROC 0.85 and\n0.74) was similar to human performance (AUROC 0.81).\n  CONCLUSION: In summary, we successfully developed cross-institution NLP\nmodels on incident report text from radiation oncology centers. These models\nwere able to detect high-severity reports similarly to humans on a curated\ndataset.",
+    "authors": [
+      "Peter Beidler",
+      "Mark Nguyen",
+      "Kevin Lybarger",
+      "Ola Holmberg",
+      "Eric Ford",
+      "John Kang"
+    ],
+    "published_date": "2025-09-17T05:29:23+00:00",
+    "updated_date": "2025-09-17T05:29:23+00:00",
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ],
+    "primary_category": "cs.CL",
+    "pdf_url": "http://arxiv.org/pdf/2509.13706v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.13636v1",
+    "arxiv_id": "2509.13636v1",
+    "title": "Multimodal signal fusion for stress detection using deep neural networks: a novel approach for converting 1D signals to unified 2D images",
+    "abstract": "This study introduces a novel method that transforms multimodal physiological\nsignalsphotoplethysmography (PPG), galvanic skin response (GSR), and\nacceleration (ACC) into 2D image matrices to enhance stress detection using\nconvolutional neural networks (CNNs). Unlike traditional approaches that\nprocess these signals separately or rely on fixed encodings, our technique\nfuses them into structured image representations that enable CNNs to capture\ntemporal and cross signal dependencies more effectively. This image based\ntransformation not only improves interpretability but also serves as a robust\nform of data augmentation. To further enhance generalization and model\nrobustness, we systematically reorganize the fused signals into multiple\nformats, combining them in a multi stage training pipeline. This approach\nsignificantly boosts classification performance. While demonstrated here in the\ncontext of stress detection, the proposed method is broadly applicable to any\ndomain involving multimodal physiological signals, paving the way for more\naccurate, personalized, and real time health monitoring through wearable\ntechnologies.",
+    "authors": [
+      "Yasin Hasanpoor",
+      "Bahram Tarvirdizadeh",
+      "Khalil Alipour",
+      "Mohammad Ghamari"
+    ],
+    "published_date": "2025-09-17T02:18:51+00:00",
+    "updated_date": "2025-09-17T02:18:51+00:00",
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.13636v1",
+    "doi": "10.1007/s11760-025-04734-z",
+    "journal_ref": "11760_2025_4734_Article",
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.13450v1",
+    "arxiv_id": "2509.13450v1",
+    "title": "SteeringControl: Holistic Evaluation of Alignment Steering in LLMs",
+    "abstract": "We introduce SteeringControl, a benchmark for evaluating representation\nsteering methods across core alignment objectives--bias, harmful generation,\nand hallucination--and their effects on secondary behaviors such as sycophancy\nand commonsense morality. While prior alignment work often highlights\ntruthfulness or reasoning ability to demonstrate the side effects of\nrepresentation steering, we find there are many unexplored tradeoffs not yet\nunderstood in a systematic way. We collect a dataset of safety-relevant primary\nand secondary behaviors to evaluate steering effectiveness and behavioral\nentanglement centered around five popular steering methods. To enable this, we\ncraft a modular steering framework based on unique components that serve as the\nbuilding blocks of many existing methods. Our results on Qwen-2.5-7B and\nLlama-3.1-8B find that strong steering performance is dependent on the specific\ncombination of steering method, model, and targeted behavior, and that severe\nconcept entanglement can result from poor combinations of these three as well.\nWe release our code here:\nhttps://github.com/wang-research-lab/SteeringControl.git.",
+    "authors": [
+      "Vincent Siu",
+      "Nicholas Crispino",
+      "David Park",
+      "Nathan W. Henry",
+      "Zhun Wang",
+      "Yang Liu",
+      "Dawn Song",
+      "Chenguang Wang"
+    ],
+    "published_date": "2025-09-16T18:36:22+00:00",
+    "updated_date": "2025-09-16T18:36:22+00:00",
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ],
+    "primary_category": "cs.AI",
+    "pdf_url": "http://arxiv.org/pdf/2509.13450v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.13131v1",
+    "arxiv_id": "2509.13131v1",
+    "title": "Reasoning with Preference Constraints: A Benchmark for Language Models in Many-to-One Matching Markets",
+    "abstract": "Recent advances in reasoning with large language models (LLMs) have\ndemonstrated strong performance on complex mathematical tasks, including\ncombinatorial optimization. Techniques such as Chain-of-Thought and In-Context\nLearning have further enhanced this capability, making LLMs both powerful and\naccessible tools for a wide range of users, including non-experts. However,\napplying LLMs to matching problems, which require reasoning under preferential\nand structural constraints, remains underexplored. To address this gap, we\nintroduce a novel benchmark of 369 instances of the College Admission Problem,\na canonical example of a matching problem with preferences, to evaluate LLMs\nacross key dimensions: feasibility, stability, and optimality. We employ this\nbenchmark to assess the performance of several open-weight LLMs. Our results\nfirst reveal that while LLMs can satisfy certain constraints, they struggle to\nmeet all evaluation criteria consistently. They also show that reasoning LLMs,\nlike QwQ and GPT-oss, significantly outperform traditional models such as\nLlama, Qwen or Mistral, defined here as models used without any dedicated\nreasoning mechanisms. Moreover, we observed that LLMs reacted differently to\nthe various prompting strategies tested, which include Chain-of-Thought,\nIn-Context Learning and role-based prompting, with no prompt consistently\noffering the best performance. Finally, we report the performances from\niterative prompting with auto-generated feedback and show that they are not\nmonotonic; they can peak early and then significantly decline in later\nattempts. Overall, this work offers a new perspective on model reasoning\nperformance and the effectiveness of prompting strategies in combinatorial\noptimization problems with preferential constraints.",
+    "authors": [
+      "Marylou Fauchard",
+      "Florian Carichon",
+      "Margarida Carvalho",
+      "Golnoosh Farnadi"
+    ],
+    "published_date": "2025-09-16T14:48:46+00:00",
+    "updated_date": "2025-09-16T14:48:46+00:00",
+    "categories": [
+      "cs.AI"
+    ],
+    "primary_category": "cs.AI",
+    "pdf_url": "http://arxiv.org/pdf/2509.13131v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.13385v1",
+    "arxiv_id": "2509.13385v1",
+    "title": "Curvature as a tool for evaluating dimensionality reduction and estimating intrinsic dimension",
+    "abstract": "Utilizing recently developed abstract notions of sectional curvature, we\nintroduce a method for constructing a curvature-based geometric profile of\ndiscrete metric spaces. The curvature concept that we use here captures the\nmetric relations between triples of points and other points. More\nsignificantly, based on this curvature profile, we introduce a quantitative\nmeasure to evaluate the effectiveness of data representations, such as those\nproduced by dimensionality reduction techniques. Furthermore, Our experiments\ndemonstrate that this curvature-based analysis can be employed to estimate the\nintrinsic dimensionality of datasets. We use this to explore the large-scale\ngeometry of empirical networks and to evaluate the effectiveness of\ndimensionality reduction techniques.",
+    "authors": [
+      "Charlotte Beylier",
+      "Parvaneh Joharinad",
+      "Jürgen Jost",
+      "Nahid Torbati"
+    ],
+    "published_date": "2025-09-16T10:14:47+00:00",
+    "updated_date": "2025-09-16T10:14:47+00:00",
+    "categories": [
+      "cs.CV",
+      "cs.DM",
+      "cs.LG",
+      "51K05 (primary) 57-08, 53Z50, 55U10 (secondary)",
+      "G.2.2"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.13385v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.12917v1",
+    "arxiv_id": "2509.12917v1",
+    "title": "Reversible Deep Equilibrium Models",
+    "abstract": "Deep Equilibrium Models (DEQs) are an interesting class of implicit model\nwhere the model output is implicitly defined as the fixed point of a learned\nfunction. These models have been shown to outperform explicit (fixed-depth)\nmodels in large-scale tasks by trading many deep layers for a single layer that\nis iterated many times. However, gradient calculation through DEQs is\napproximate. This often leads to unstable training dynamics and requires\nregularisation or many function evaluations to fix. Here, we introduce\nReversible Deep Equilibrium Models (RevDEQs) that allow for exact gradient\ncalculation, no regularisation and far fewer function evaluations than DEQs. We\nshow that RevDEQs achieve state-of-the-art performance on language modelling\nand image classification tasks against comparable implicit and explicit models.",
+    "authors": [
+      "Sam McCallum",
+      "Kamran Arora",
+      "James Foster"
+    ],
+    "published_date": "2025-09-16T10:11:38+00:00",
+    "updated_date": "2025-09-16T10:11:38+00:00",
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.12917v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.12905v1",
+    "arxiv_id": "2509.12905v1",
+    "title": "AREPAS: Anomaly Detection in Fine-Grained Anatomy with Reconstruction-Based Semantic Patch-Scoring",
+    "abstract": "Early detection of newly emerging diseases, lesion severity assessment,\ndifferentiation of medical conditions and automated screening are examples for\nthe wide applicability and importance of anomaly detection (AD) and\nunsupervised segmentation in medicine. Normal fine-grained tissue variability\nsuch as present in pulmonary anatomy is a major challenge for existing\ngenerative AD methods. Here, we propose a novel generative AD approach\naddressing this issue. It consists of an image-to-image translation for\nanomaly-free reconstruction and a subsequent patch similarity scoring between\nobserved and generated image-pairs for precise anomaly localization. We\nvalidate the new method on chest computed tomography (CT) scans for the\ndetection and segmentation of infectious disease lesions. To assess\ngeneralizability, we evaluate the method on an ischemic stroke lesion\nsegmentation task in T1-weighted brain MRI. Results show improved pixel-level\nanomaly segmentation in both chest CTs and brain MRIs, with relative DICE score\nimprovements of +1.9% and +4.4%, respectively, compared to other\nstate-of-the-art reconstruction-based methods.",
+    "authors": [
+      "Branko Mitic",
+      "Philipp Seeböck",
+      "Helmut Prosch",
+      "Georg Langs"
+    ],
+    "published_date": "2025-09-16T09:59:47+00:00",
+    "updated_date": "2025-09-16T09:59:47+00:00",
+    "categories": [
+      "cs.CV"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.12905v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.12866v1",
+    "arxiv_id": "2509.12866v1",
+    "title": "Leveraging Large Language Models to Effectively Generate Visual Data for Canine Musculoskeletal Diagnoses",
+    "abstract": "It is well-established that more data generally improves AI model\nperformance. However, data collection can be challenging for certain tasks due\nto the rarity of occurrences or high costs. These challenges are evident in our\nuse case, where we apply AI models to a novel approach for visually documenting\nthe musculoskeletal condition of dogs. Here, abnormalities are marked as\ncolored strokes on a body map of a dog. Since these strokes correspond to\ndistinct muscles or joints, they can be mapped to the textual domain in which\nlarge language models (LLMs) operate. LLMs have demonstrated impressive\ncapabilities across a wide range of tasks, including medical applications,\noffering promising potential for generating synthetic training data. In this\nwork, we investigate whether LLMs can effectively generate synthetic visual\ntraining data for canine musculoskeletal diagnoses. For this, we developed a\nmapping that segments visual documentations into over 200 labeled regions\nrepresenting muscles or joints. Using techniques like guided decoding,\nchain-of-thought reasoning, and few-shot prompting, we generated 1,000\nsynthetic visual documentations for patellar luxation (kneecap dislocation)\ndiagnosis, the diagnosis for which we have the most real-world data. Our\nanalysis shows that the generated documentations are sensitive to location and\nseverity of the diagnosis while remaining independent of the dog's sex. We\nfurther generated 1,000 visual documentations for various other diagnoses to\ncreate a binary classification dataset. A model trained solely on this\nsynthetic data achieved an F1 score of 88% on 70 real-world documentations.\nThese results demonstrate the potential of LLM-generated synthetic data, which\nis particularly valuable for addressing data scarcity in rare diseases. While\nour methodology is tailored to the medical domain, the insights and techniques\ncan be adapted to other fields.",
+    "authors": [
+      "Martin Thißen",
+      "Thi Ngoc Diep Tran",
+      "Barbara Esteve Ratsch",
+      "Ben Joel Schönbein",
+      "Ute Trapp",
+      "Beate Egner",
+      "Romana Piat",
+      "Elke Hergenröther"
+    ],
+    "published_date": "2025-09-16T09:22:17+00:00",
+    "updated_date": "2025-09-16T09:22:17+00:00",
+    "categories": [
+      "cs.CV"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.12866v1",
+    "doi": "10.24132/CSRN.2025-3",
+    "journal_ref": "Computer Science Research Notes 3501(1) (2025) 27-38",
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.12791v1",
+    "arxiv_id": "2509.12791v1",
+    "title": "Superpixel Anything: A general object-based framework for accurate yet regular superpixel segmentation",
+    "abstract": "Superpixels are widely used in computer vision to simplify image\nrepresentation and reduce computational complexity. While traditional methods\nrely on low-level features, deep learning-based approaches leverage high-level\nfeatures but also tend to sacrifice regularity of superpixels to capture\ncomplex objects, leading to accurate but less interpretable segmentations. In\nthis work, we introduce SPAM (SuperPixel Anything Model), a versatile framework\nfor segmenting images into accurate yet regular superpixels. We train a model\nto extract image features for superpixel generation, and at inference, we\nleverage a large-scale pretrained model for semantic-agnostic segmentation to\nensure that superpixels align with object masks. SPAM can handle any prior\nhigh-level segmentation, resolving uncertainty regions, and is able to\ninteractively focus on specific objects. Comprehensive experiments demonstrate\nthat SPAM qualitatively and quantitatively outperforms state-of-the-art methods\non segmentation tasks, making it a valuable and robust tool for various\napplications. Code and pre-trained models are available here:\nhttps://github.com/waldo-j/spam.",
+    "authors": [
+      "Julien Walther",
+      "Rémi Giraud",
+      "Michaël Clément"
+    ],
+    "published_date": "2025-09-16T08:09:24+00:00",
+    "updated_date": "2025-09-16T08:09:24+00:00",
+    "categories": [
+      "cs.CV"
+    ],
+    "primary_category": "cs.CV",
+    "pdf_url": "http://arxiv.org/pdf/2509.12791v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.12600v1",
+    "arxiv_id": "2509.12600v1",
+    "title": "A Multimodal Foundation Model to Enhance Generalizability and Data Efficiency for Pan-cancer Prognosis Prediction",
+    "abstract": "Multimodal data provides heterogeneous information for a holistic\nunderstanding of the tumor microenvironment. However, existing AI models often\nstruggle to harness the rich information within multimodal data and extract\npoorly generalizable representations. Here we present MICE (Multimodal data\nIntegration via Collaborative Experts), a multimodal foundation model that\neffectively integrates pathology images, clinical reports, and genomics data\nfor precise pan-cancer prognosis prediction. Instead of conventional\nmulti-expert modules, MICE employs multiple functionally diverse experts to\ncomprehensively capture both cross-cancer and cancer-specific insights.\nLeveraging data from 11,799 patients across 30 cancer types, we enhanced MICE's\ngeneralizability by coupling contrastive and supervised learning. MICE\noutperformed both unimodal and state-of-the-art multi-expert-based multimodal\nmodels, demonstrating substantial improvements in C-index ranging from 3.8% to\n11.2% on internal cohorts and 5.8% to 8.8% on independent cohorts,\nrespectively. Moreover, it exhibited remarkable data efficiency across diverse\nclinical scenarios. With its enhanced generalizability and data efficiency,\nMICE establishes an effective and scalable foundation for pan-cancer prognosis\nprediction, holding strong potential to personalize tailored therapies and\nimprove treatment outcomes.",
+    "authors": [
+      "Huajun Zhou",
+      "Fengtao Zhou",
+      "Jiabo Ma",
+      "Yingxue Xu",
+      "Xi Wang",
+      "Xiuming Zhang",
+      "Li Liang",
+      "Zhenhui Li",
+      "Hao Chen"
+    ],
+    "published_date": "2025-09-16T02:57:55+00:00",
+    "updated_date": "2025-09-16T02:57:55+00:00",
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "q-bio.QM"
+    ],
+    "primary_category": "cs.LG",
+    "pdf_url": "http://arxiv.org/pdf/2509.12600v1",
+    "doi": null,
+    "journal_ref": null,
+    "source": "arxiv"
+  },
+  {
+    "id": "2b0ca4252772f175bcc7fc0f497009558717d2c9",
+    "semantic_scholar_id": "2b0ca4252772f175bcc7fc0f497009558717d2c9",
+    "title": "Disrupt Your Research Using Generative AI Powered ScienceSage",
+    "abstract": "Large Language Models (LLM) are disrupting science and research in different subjects and industries. Here we report a minimum-viable-product (MVP) web application called $\\textbf{ScienceSage}$. It leverages generative artificial intelligence (GenAI) to help researchers disrupt the speed, magnitude and scope of product innovation. $\\textbf{ScienceSage}$ enables researchers to build, store, update and query a knowledge base (KB). A KB codifies user's knowledge/information of a given domain in both vector index and knowledge graph (KG) index for efficient information retrieval and query. The knowledge/information can be extracted from user's textual documents, images, videos, audios and/or the research reports generated based on a research question and the latest relevant information on internet. The same set of KBs interconnect three functions on $\\textbf{ScienceSage}$: 'Generate Research Report', 'Chat With Your Documents' and 'Chat With Anything'. We share our learning to encourage discussion and improvement of GenAI's role in scientific research.",
+    "authors": [
+      "Yong Zhang",
+      "Eric Herrison Gyamfi",
+      "Kelly Anderson",
+      "Sasha Roberts",
+      "Matt Barker"
+    ],
+    "year": 2025,
+    "publication_date": "2025-02-06",
+    "venue": "arXiv.org",
+    "journal": "ArXiv",
+    "citation_count": 0,
+    "url": "https://www.semanticscholar.org/paper/2b0ca4252772f175bcc7fc0f497009558717d2c9",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "6a4deeb40aed8a4d56c8d9401c94b6c7a769e8c3",
+    "semantic_scholar_id": "6a4deeb40aed8a4d56c8d9401c94b6c7a769e8c3",
+    "title": "CSFCube - A Test Collection of Computer Science Research Articles for Faceted Query by Example",
+    "abstract": "Query by Example is a well-known information retrieval task in which a document is chosen by the user as the search query and the goal is to retrieve relevant documents from a large collection. However, a document often covers multiple aspects of a topic. To address this scenario we introduce the task of faceted Query by Example in which users can also specify a finer grained aspect in addition to the input query document. We focus on the application of this task in scientific literature search. We envision models which are able to retrieve scientific papers analogous to a query scientific paper along specifically chosen rhetorical structure elements as one solution to this problem. In this work, the rhetorical structure elements, which we refer to as facets, indicate objectives, methods, or results of a scientific paper. We introduce and describe an expert annotated test collection to evaluate models trained to perform this task. Our test collection consists of a diverse set of 50 query documents in English, drawn from computational linguistics and machine learning venues. We carefully follow the annotation guideline used by TREC for depth-k pooling (k = 100 or 250) and the resulting data collection consists of graded relevance scores with high annotation agreement. State of the art models evaluated on our dataset show a significant gap to be closed in further work. Our dataset may be accessed here: https://github.com/iesl/CSFCube",
+    "authors": [
+      "Sheshera Mysore",
+      "Timothy J. O'Gorman",
+      "A. McCallum",
+      "Hamed Zamani"
+    ],
+    "year": 2021,
+    "publication_date": "2021-03-24",
+    "venue": "NeurIPS Datasets and Benchmarks",
+    "journal": "ArXiv",
+    "citation_count": 23,
+    "url": "https://www.semanticscholar.org/paper/6a4deeb40aed8a4d56c8d9401c94b6c7a769e8c3",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "a525a1fb78df5ffea6bb829301304b9cc61bf26e",
+    "semantic_scholar_id": "a525a1fb78df5ffea6bb829301304b9cc61bf26e",
+    "title": "Data Preparation 101: How To Use Query- By-Example To Get Your Research Dataset Ready For Primetime",
+    "abstract": null,
+    "authors": [
+      "Paul J. Lazarony",
+      "Donna A. Driscoll"
+    ],
+    "year": 2011,
+    "publication_date": "2011-03-23",
+    "venue": "",
+    "journal": "American Journal of Business Education",
+    "citation_count": 1,
+    "url": "https://www.semanticscholar.org/paper/a525a1fb78df5ffea6bb829301304b9cc61bf26e",
+    "pdf_url": "https://clutejournals.com/index.php/AJBE/article/download/4109/4229",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "f99401ed0b8c0b7f2a150150e3c17d2d9b097587",
+    "semantic_scholar_id": "f99401ed0b8c0b7f2a150150e3c17d2d9b097587",
+    "title": "Review on Query-focused Multi-document Summarization (QMDS) with Comparative Analysis",
+    "abstract": "The problem of query-focused multi-document summarization (QMDS) is to generate a summary from multiple source documents on identical/similar topics based on the query submitted by the users. This article provides a systematic review of the literature of QMDS. The research works are classified into six major categories based on the summarization methodologies used. Different techniques used for finding query-relevant summaries for different algorithms under each of the six major groups are reported. Further, 17 evaluation metrics used for evaluating algorithms for text summaries against the human-curated summaries are compiled here in this article. Extensive experiments are performed on eight different datasets. Comparative results of nine methodologies, each representing one of the six different groups, are presented. Seven different evaluation metrics are used in the comparative study. It is observed that DL- and ML-based QMDS methods perform. better in comparison to the other methods.",
+    "authors": [
+      "Prasenjeet Roy",
+      "Suman Kundu"
+    ],
+    "year": 2023,
+    "publication_date": "2023-05-16",
+    "venue": "ACM Computing Surveys",
+    "journal": "ACM Computing Surveys",
+    "citation_count": 9,
+    "url": "https://www.semanticscholar.org/paper/f99401ed0b8c0b7f2a150150e3c17d2d9b097587",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "64224372ddf18fa9b6cc9fca12b8643be696cc29",
+    "semantic_scholar_id": "64224372ddf18fa9b6cc9fca12b8643be696cc29",
+    "title": "HoppingSketch: More Accurate Temporal Membership Query and Frequency Query",
+    "abstract": "Nowadays, research on temporal membership queries is indispensable. Generally, temporal membership queries exist in two modalities: fixed windows and sliding windows, the latter having obvious advantages. The first sketch that implements temporal membership queries is the persistent Bloom filter (PBF). PBF has two shortcomings: it does not support sliding windows nor frequency queries. Here, we propose HoppingSketch to promote the original PBF. It is the first sketch that implements temporal membership queries for sliding windows. HoppingSketch is a general and efficient data stream processing framework, able to implement different tasks thanks to different atomic sketches. When the atomic sketches are Bloom filters and we apply them to PBF, HoppingSketch can achieve significantly higher temporal membership query accuracy than the original PBF. When the atomic sketches are sketches of Count-Min, Conservative Update, and Count, HoppingSketch can achieve more accurate frequency query than by applying PBF on the corresponding sketches. Our experimental results demonstrate the advantages of HoppingSketch compared with the state-of-the-art.",
+    "authors": [
+      "Zhuochen Fan",
+      "Yubo Zhang",
+      "Siyuan Dong",
+      "Yi Zhou",
+      "Fang Liu",
+      "Tong Yang",
+      "Steve Uhlig",
+      "Bin Cui"
+    ],
+    "year": 2023,
+    "publication_date": "2023-09-01",
+    "venue": "IEEE Transactions on Knowledge and Data Engineering",
+    "journal": "IEEE Transactions on Knowledge and Data Engineering",
+    "citation_count": 4,
+    "url": "https://www.semanticscholar.org/paper/64224372ddf18fa9b6cc9fca12b8643be696cc29",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "66135aa373205d1daae09237c93ede5431085884",
+    "semantic_scholar_id": "66135aa373205d1daae09237c93ede5431085884",
+    "title": "A Query Language Perspective on Graph Learning",
+    "abstract": "A key component of graph and relational learning methods is the computation of vector representations of the input graphs or relations. The starting point of this tutorial is that we model this computation as queries, mapping relational objects into the realm of real vector spaces. We then revisit recent works in the machine learning community on the expressive power of graph learning methods from this unifying query language perspective. Here, we consider the expressive power related to the discrimination of inputs and to the approximation power of functions. Finally, we argue that the bridge between graph learning and query languages opens many interesting avenues for further research.",
+    "authors": [
+      "Floris Geerts"
+    ],
+    "year": 2023,
+    "publication_date": "2023-06-18",
+    "venue": "ACM SIGACT-SIGMOD-SIGART Symposium on Principles of Database Systems",
+    "journal": "Proceedings of the 42nd ACM SIGMOD-SIGACT-SIGAI Symposium on Principles of Database Systems",
+    "citation_count": 5,
+    "url": "https://www.semanticscholar.org/paper/66135aa373205d1daae09237c93ede5431085884",
+    "pdf_url": "https://repository.uantwerpen.be/docstore/d:irua:21874",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "d29291257e52f49a19fe5999ac2caa0fc5d95d68",
+    "semantic_scholar_id": "d29291257e52f49a19fe5999ac2caa0fc5d95d68",
+    "title": "A Survey on Active Learning: State-of-the-Art, Practical Challenges and Research Directions",
+    "abstract": "Despite the availability and ease of collecting a large amount of free, unlabeled data, the expensive and time-consuming labeling process is still an obstacle to labeling a sufficient amount of training data, which is essential for building supervised learning models. Here, with low labeling cost, the active learning (AL) technique could be a solution, whereby a few, high-quality data points are queried by searching for the most informative and representative points within the instance space. This strategy ensures high generalizability across the space and improves classification performance on data we have never seen before. In this paper, we provide a survey of recent studies on active learning in the context of classification. This survey starts with an introduction to the theoretical background of the AL technique, AL scenarios, AL components supported with visual explanations, and illustrative examples to explain how AL simply works and the benefits of using AL. In addition to an overview of the query strategies for the classification scenarios, this survey provides a high-level summary to explain various practical challenges with AL in real-world settings; it also explains how AL can be combined with various research areas. Finally, the most commonly used AL software packages and experimental evaluation metrics with AL are also discussed.",
+    "authors": [
+      "Alaa Tharwat",
+      "Wolfram Schenck"
+    ],
+    "year": 2023,
+    "publication_date": "2023-02-06",
+    "venue": "Mathematics",
+    "journal": "Mathematics",
+    "citation_count": 101,
+    "url": "https://www.semanticscholar.org/paper/d29291257e52f49a19fe5999ac2caa0fc5d95d68",
+    "pdf_url": "https://www.mdpi.com/2227-7390/11/4/820/pdf?version=1675678080",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "8c8c2c7c8dbacd6ee1ba66e535209fd81959eb85",
+    "semantic_scholar_id": "8c8c2c7c8dbacd6ee1ba66e535209fd81959eb85",
+    "title": "BART: a transcription factor prediction tool with query gene sets or epigenomic profiles",
+    "abstract": "Summary Identification of functional transcription factors that regulate a given gene set is an important problem in gene regulation studies. Conventional approaches for identifying transcription factors, such as DNA sequence motif analysis, are unable to predict functional binding of specific factors and not sensitive to detect factors binding at distal enhancers. Here we present Binding Analysis for Regulation of Transcription (BART), a novel computational method and software package for predicting functional transcription factors that regulate a query gene set or associate with a query genomic profile, based on more than 6,000 existing ChIP-seq datasets for over 400 factors in human or mouse. This method demonstrates the advantage of utilizing publicly available data for functional genomics research. Availability BART is implemented in Python and available at http://faculty.virginia.edu/zanglab/bart Contact: zang@virginia.edu",
+    "authors": [
+      "Zhenjia Wang",
+      "M. Civelek",
+      "C. Miller",
+      "Nathan C. Sheffield",
+      "Michael J. Guertin",
+      "C. Zang"
+    ],
+    "year": 2018,
+    "publication_date": "2018-03-12",
+    "venue": "bioRxiv",
+    "journal": "bioRxiv",
+    "citation_count": 94,
+    "url": "https://www.semanticscholar.org/paper/8c8c2c7c8dbacd6ee1ba66e535209fd81959eb85",
+    "pdf_url": "https://www.biorxiv.org/content/biorxiv/early/2018/03/12/280982.full.pdf",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "8ca4d1668c82b41ddad51dfa833dcca03101150f",
+    "semantic_scholar_id": "8ca4d1668c82b41ddad51dfa833dcca03101150f",
+    "title": "The ADC API: A Web API for the Programmatic Query of the AIRR Data Commons",
+    "abstract": "The Adaptive Immune Receptor Repertoire (AIRR) Community is a research-driven group that is establishing a clear set of community-accepted data and metadata standards; standards-based reference implementation tools; and policies and practices for infrastructure to support the deposit, curation, storage, and use of high-throughput sequencing data from B-cell and T-cell receptor repertoires (AIRR-seq data). The AIRR Data Commons is a distributed system of data repositories that utilizes a common data model, a common query language, and common interoperability formats for storage, query, and downloading of AIRR-seq data. Here is described the principal technical standards for the AIRR Data Commons consisting of the AIRR Data Model for repertoires and rearrangements, the AIRR Data Commons (ADC) API for programmatic query of data repositories, a reference implementation for ADC API services, and tools for querying and validating data repositories that support the ADC API. AIRR-seq data repositories can become part of the AIRR Data Commons by implementing the data model and API. The AIRR Data Commons allows AIRR-seq data to be reused for novel analyses and empowers researchers to discover new biological insights about the adaptive immune system.",
+    "authors": [
+      "S. Christley",
+      "Ademar Aguiar",
+      "G. Blanck",
+      "F. Breden",
+      "Syed Ahmad Chan Bukhari",
+      "C. E. Busse",
+      "Jerome Jaglale",
+      "Srilakshmy L. Harikrishnan",
+      "Uri Laserson",
+      "Bjoern Peters",
+      "Artur Rocha",
+      "Chaim A. Schramm",
+      "Sarah Taylor",
+      "J. V. Heiden",
+      "Bojan Zimonja",
+      "C. Watson",
+      "Brian D Corrie",
+      "L. Cowell"
+    ],
+    "year": 2020,
+    "publication_date": "2020-06-17",
+    "venue": "Frontiers in Big Data",
+    "journal": "Frontiers in Big Data",
+    "citation_count": 27,
+    "url": "https://www.semanticscholar.org/paper/8ca4d1668c82b41ddad51dfa833dcca03101150f",
+    "pdf_url": "https://www.frontiersin.org/articles/10.3389/fdata.2020.00022/pdf",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "215a8b44cb9daf7286f573453ff777d3058cf9f5",
+    "semantic_scholar_id": "215a8b44cb9daf7286f573453ff777d3058cf9f5",
+    "title": "Examining the Additivity of Top-k Query Processing Innovations",
+    "abstract": "Research activity spanning more than five decades has led to index organizations, compression schemes, and traversal algorithms that allow extremely rapid response to ranked queries against very large text collections. However, little attention has been paid to the interactions between these many components, and the additivity of algorithmic improvements has not been explored. Here we examine the extent to which efficiency improvements add up. We employ four query processing algorithms, four compression codecs, and all possible combinations of four distinct further optimizations, and compare the performance of the 256 resulting systems to determine when and how different optimizations interact. Our results over two test collections show that efficiency enhancements are, for the most part, additive, and that there is little risk of negative interactions. In addition, our detailed profiling across this large pool of systems leads to key insights as to why the various individual enhancements work well, and indicates that optimizing \"simpler\" implementations can result in higher query throughput than is available from non-optimized versions of the more \"complex\" techniques, with clear implications for the choices needing to be made by practitioners.",
+    "authors": [
+      "J. Mackenzie",
+      "Alistair Moffat"
+    ],
+    "year": 2020,
+    "publication_date": "2020-10-19",
+    "venue": "International Conference on Information and Knowledge Management",
+    "journal": "Proceedings of the 29th ACM International Conference on Information & Knowledge Management",
+    "citation_count": 22,
+    "url": "https://www.semanticscholar.org/paper/215a8b44cb9daf7286f573453ff777d3058cf9f5",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "91867f1a89014be11630bebc4cd239ad62afc460",
+    "semantic_scholar_id": "91867f1a89014be11630bebc4cd239ad62afc460",
+    "title": "SMCQL: Secure Query Processing for Private Data Networks",
+    "abstract": "People and machines are recording data at an unprecedented rate. At the same time, progress has been slow in making data available for open science and other research initiatives. Many of these efforts are stymied by privacy concerns and regulatory compliance issues. For example, numerous hospitals are interested in combining their patient records with those of other healthcare sites for clinical data research, but they cannot disclose the contents of their databases without violating patient confidentiality. We propose a novel generalization of federated database systems called a private data network (PDN), and it is designed for querying over the collective data of mutually distrustful parties. In a PDN, participants do not reveal their raw data, nor do they encrypt and upload it to the cloud. Rather, they perform secure multiparty computation (SMC) with other federation members to produce query results over the data of both parties. Here, a user submits their SQL query to an honest broker that plans and coordinates its distributed execution using SMC. \nWithin SMC, the participating database providers compute a joint function with an output that is only revealed to the user and the honest broker. The databases computing the query learn nothing about the inputs provided by their peers, nor can they see the output of the group's computation. This capability comes at a high cost-SMC programs typically have runtimes that are orders of magnitude slower than their insecure counterparts. We address this challenge with a query planner that automatically identifies the minimal set of coordination points between parties in a given query plan. The planner translates these distributed steps into SMC as needed and feeds the secure code into our query executor. Our framework, SMCQL, plans and executes PDN queries. We are preparing SMCQL for an open-source release.",
+    "authors": [
+      "Johes Bater",
+      "Gregory Elliott",
+      "Craig Eggen",
+      "Satyender Goel",
+      "A. Kho",
+      "Jennie Duggan"
+    ],
+    "year": 2016,
+    "publication_date": "2016-06-22",
+    "venue": "Very Large Data Bases Conference",
+    "journal": "ArXiv",
+    "citation_count": 81,
+    "url": "https://www.semanticscholar.org/paper/91867f1a89014be11630bebc4cd239ad62afc460",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "fd6985724c691c59c3c8e34b27ba03525dc2a2a3",
+    "semantic_scholar_id": "fd6985724c691c59c3c8e34b27ba03525dc2a2a3",
+    "title": "Foundations of Digital Methods: Query Design",
+    "abstract": null,
+    "authors": [
+      "Richard A. Rogers"
+    ],
+    "year": 2017,
+    "publication_date": "2017-02-23",
+    "venue": "",
+    "journal": "",
+    "citation_count": 73,
+    "url": "https://www.semanticscholar.org/paper/fd6985724c691c59c3c8e34b27ba03525dc2a2a3",
+    "pdf_url": "https://pure.uva.nl/ws/files/10029598/Rogers_624771.pdf",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "d4cf0f36179f4141aa08ad8785408b3c8d14bd77",
+    "semantic_scholar_id": "d4cf0f36179f4141aa08ad8785408b3c8d14bd77",
+    "title": "Generation of Synthetic Query Auto Completion Logs",
+    "abstract": "Privacy concerns can prohibit research access to large-scale commercial query logs. Here we focus on generation of a synthetic log from a publicly available dataset, suitable for evaluation of query auto completion (QAC) systems. The synthetic log contains plausible string sequences reflecting how users enter their queries in a QAC interface. Properties that would influence experimental outcomes are compared between a synthetic log and a real QAC log through a set of side-by-side experiments, and confirm the applicability of the generated log for benchmarking the performance of QAC methods.",
+    "authors": [
+      "Unni Krishnan",
+      "Alistair Moffat",
+      "J. Zobel",
+      "B. Billerbeck"
+    ],
+    "year": 2020,
+    "publication_date": "2020-03-17",
+    "venue": "European Conference on Information Retrieval",
+    "journal": "Advances in Information Retrieval",
+    "citation_count": 10,
+    "url": "https://www.semanticscholar.org/paper/d4cf0f36179f4141aa08ad8785408b3c8d14bd77",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "09f4334b38b41e987535d5ae5b2afb6142f57e6c",
+    "semantic_scholar_id": "09f4334b38b41e987535d5ae5b2afb6142f57e6c",
+    "title": "Trend mining with Orange – using topic modeling in futures research with the example of urban mobility",
+    "abstract": "Today, assumptions about probable future developments (at least as far as they make use of quantifiable scientific methods and are not pure speculation) are generally based on data from the past. An interesting way to analyze the future through this type of data is text mining or individual methods out of the spectrum of text mining, such as topic modeling. Topic Modeling itself is a combination of quantitative and qualitative methodology and is based on the full spectrum of social science methodology. Therefore, the method is an interesting way for futures research to analyze futures. This publication addresses the question of how a combination of different methods can contribute to trend monitoring or trend mining. For this purpose, a set of scientific publications was first generated with the help of a search query in the Web of Science (WoS), which is the basis for all evaluations and statements and topics. In essence, the method considered here should be more fully integrated into the scientific practice of futures research because it can make a valuable contribution to estimating future development based on past development.",
+    "authors": [
+      "M. Sonk",
+      "Dirk Tunger"
+    ],
+    "year": 2024,
+    "publication_date": "2024-03-11",
+    "venue": "European Journal of Futures Research",
+    "journal": "European Journal of Futures Research",
+    "citation_count": 2,
+    "url": "https://www.semanticscholar.org/paper/09f4334b38b41e987535d5ae5b2afb6142f57e6c",
+    "pdf_url": "https://eujournalfuturesresearch.springeropen.com/counter/pdf/10.1186/s40309-024-00229-1",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "4e98b6501672cf524d7c83db38ae18929dc37942",
+    "semantic_scholar_id": "4e98b6501672cf524d7c83db38ae18929dc37942",
+    "title": "TAR: Algorithm for Mining XML Query Answering",
+    "abstract": null,
+    "authors": [
+      "R. Paper",
+      "Swarupa N. Sable",
+      "M.Tech. Student"
+    ],
+    "year": 2016,
+    "publication_date": null,
+    "venue": "",
+    "journal": "",
+    "citation_count": 2,
+    "url": "https://www.semanticscholar.org/paper/4e98b6501672cf524d7c83db38ae18929dc37942",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "4252de327cf9a4d1339c3213455fc2662be0e634",
+    "semantic_scholar_id": "4252de327cf9a4d1339c3213455fc2662be0e634",
+    "title": "Trajectory Clustering and k-NN for Robust Privacy Preserving k-NN Query Processing in GeoSpark",
+    "abstract": "Privacy Preserving and Anonymity have gained significant concern from the big data perspective. We have the view that the forthcoming frameworks and theories will establish several solutions for privacy protection. The k-anonymity is considered a key solution that has been widely employed to prevent data re-identifcation and concerns us in the context of this work. Data modeling has also gained significant attention from the big data perspective. It is believed that the advancing distributed environments will provide users with several solutions for efficient spatio-temporal data management. GeoSpark will be utilized in the current work as it is a key solution that has been widely employed for spatial data. Specifically, it works on the top of Apache Spark, the main framework leveraged from the research community and organizations for big data transformation, processing and visualization. To this end, we focused on trajectory data representation so as to be applicable to the GeoSpark environment, and a GeoSpark-based approach is designed for the efficient management of real spatio-temporal data. Th next step is to gain deeper understanding of the data through the application of k nearest neighbor (k-NN) queries either using indexing methods or otherwise. The k-anonymity set computation, which is the main component for privacy preservation evaluation and the main issue of our previous works, is evaluated in the GeoSpark environment. More to the point, the focus here is on the time cost of k-anonymity set computation along with vulnerability measurement. The extracted results are presented into tables and figures for visual inspection.",
+    "authors": [
+      "Elias Dritsas",
+      "Andreas Kanavos",
+      "M. Trigka",
+      "Gerasimos Vonitsanos",
+      "S. Sioutas",
+      "A. Tsakalidis"
+    ],
+    "year": 2020,
+    "publication_date": "2020-07-28",
+    "venue": "Algorithms",
+    "journal": "Algorithms",
+    "citation_count": 8,
+    "url": "https://www.semanticscholar.org/paper/4252de327cf9a4d1339c3213455fc2662be0e634",
+    "pdf_url": "https://www.mdpi.com/1999-4893/13/8/182/pdf?version=1595923130",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "71b1abcbbda8c7485ad41ccfd56e3740d062445a",
+    "semantic_scholar_id": "71b1abcbbda8c7485ad41ccfd56e3740d062445a",
+    "title": "Review on Efficient Query processing for Set Predicates of Dynamically Formed Group",
+    "abstract": null,
+    "authors": [
+      "R. Paper",
+      "Jayant Rajurkar",
+      "T. Khan",
+      "G. H. Raisoni"
+    ],
+    "year": 2014,
+    "publication_date": null,
+    "venue": "",
+    "journal": "",
+    "citation_count": 6,
+    "url": "https://www.semanticscholar.org/paper/71b1abcbbda8c7485ad41ccfd56e3740d062445a",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "81b9d76331013b979c1e6496293bd4640a517974",
+    "semantic_scholar_id": "81b9d76331013b979c1e6496293bd4640a517974",
+    "title": "Query Expansion in Information Retrieval for Urdu Language",
+    "abstract": null,
+    "authors": [
+      "Imran Rasheed",
+      "H. Banka"
+    ],
+    "year": 2018,
+    "publication_date": "2018-03-01",
+    "venue": "International Workshop on Computer Architectures for Machine Perception",
+    "journal": "2018 Fourth International Conference on Information Retrieval and Knowledge Management (CAMP)",
+    "citation_count": 11,
+    "url": "https://www.semanticscholar.org/paper/81b9d76331013b979c1e6496293bd4640a517974",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "f7d82c9e5fa166eaa82248e8c9f969f2997faa1b",
+    "semantic_scholar_id": "f7d82c9e5fa166eaa82248e8c9f969f2997faa1b",
+    "title": "Progress in climate change adaptation research",
+    "abstract": "The scientific literature on climate change adaptation has become too large to assess manually. Beyond standard scientometrics, questions about if and how the field is progressing thus remain largely unanswered. Here we provide a novel, inquisitive, computer-assisted evidence mapping methodology that combines expert interviews (n = 26) and structural topic modelling to evaluate open-ended research questions on progress in the field. We apply this to 62 191 adaptation-relevant scientific publications (1988–2020), selected through supervised machine learning from a comprehensive climate change query. Comparing the literature to key benchmarks of mature adaptation research, our findings align with trends in the adaptation literature observed by most experts: the field is maturing, growing rapidly, and diversifying, with social science and implementation topics arising next to the still-dominant natural sciences and impacts-focused research. Formally assessing the representativeness of IPCC citations, we find evidence of a delay effect for fast-growing areas of research like adaptation strategies and governance. Similarly, we show significant topic biases by geographic location: especially disaster and development-related topics are often studied in Southern countries by authors from the North, while Northern countries dominate governance topics. Moreover, there is a general paucity of research in some highly vulnerable countries. Experts lastly signal a need for meaningful stakeholder involvement. Expanding on the methods presented here would aid the comprehensive and transparent monitoring of adaptation research. For the evidence synthesis community, our methodology provides an example of how to move beyond the descriptive towards the inquisitive and formally evaluating research questions.",
+    "authors": [
+      "Anne J. Sietsma",
+      "J. Ford",
+      "M. Callaghan",
+      "J. Minx"
+    ],
+    "year": 2021,
+    "publication_date": "2021-04-14",
+    "venue": "Environmental Research Letters",
+    "journal": "Environmental Research Letters",
+    "citation_count": 59,
+    "url": "https://www.semanticscholar.org/paper/f7d82c9e5fa166eaa82248e8c9f969f2997faa1b",
+    "pdf_url": "https://doi.org/10.1088/1748-9326/abf7f3",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "0d55e6213d455a75b801c7ee2687899ef33cabc6",
+    "semantic_scholar_id": "0d55e6213d455a75b801c7ee2687899ef33cabc6",
+    "title": "Analyzing and Optimizing Java Code Generation for Apache Spark Query Plan",
+    "abstract": "Big data processing frameworks have received attention because of the importance of high performance computation. They are expected to quickly process a huge amount of data in memory with a simple programming model in a cluster. Apache Spark is becoming one of the most popular frameworks. Several studies have analyzed Spark programs and optimized their performance. Recent versions of Spark generate optimized Java code from a Spark program, but few research works have analyzed and improved such generated code to achieve better performance. Here, two types of problems were analyzed by inspecting generated code, namely, access to column-oriented storage and to a primitive-type array. The resulting performance issues in the generated code and were analyzed, and optimizations that can eliminate inefficient code were devised to solve the issues. The proposed optimizations were then implemented for Spark. Experimental results with the optimizations on a cluster of five Intel machines indicated performance improvement by up to 1.4x for TPC-H queries and by up to 1.4x for machine-learning programs. These optimizations have since been integrated into the release version of Apache Spark 2.3.",
+    "authors": [
+      "K. Ishizaki"
+    ],
+    "year": 2019,
+    "publication_date": "2019-04-04",
+    "venue": "International Conference on Performance Engineering",
+    "journal": "Proceedings of the 2019 ACM/SPEC International Conference on Performance Engineering",
+    "citation_count": 4,
+    "url": "https://www.semanticscholar.org/paper/0d55e6213d455a75b801c7ee2687899ef33cabc6",
+    "pdf_url": "http://dl.acm.org/ft_gateway.cfm?id=3310300&type=pdf",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "eda93a4a22f4718a2fb53bcf454c55bd6c01b0ae",
+    "semantic_scholar_id": "eda93a4a22f4718a2fb53bcf454c55bd6c01b0ae",
+    "title": "Mailbox-Based vs. Log-Based Query Completion for Mail Search",
+    "abstract": null,
+    "authors": [
+      "M. Horovitz",
+      "L. Lewin-Eytan",
+      "Alex Libov",
+      "Y. Maarek",
+      "Ariel Raviv"
+    ],
+    "year": 2017,
+    "publication_date": "2017-08-07",
+    "venue": "Annual International ACM SIGIR Conference on Research and Development in Information Retrieval",
+    "journal": "Proceedings of the 40th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+    "citation_count": 6,
+    "url": "https://www.semanticscholar.org/paper/eda93a4a22f4718a2fb53bcf454c55bd6c01b0ae",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "6aaafe50b44420f56dd9dccfe87cc941bf0c8798",
+    "semantic_scholar_id": "6aaafe50b44420f56dd9dccfe87cc941bf0c8798",
+    "title": "Rhone: A Quality-Based Query Rewriting Algorithm for Data Integration",
+    "abstract": null,
+    "authors": [
+      "Daniel A. S. Carvalho",
+      "P. A. S. Neto",
+      "C. Ghedira",
+      "N. Bennani",
+      "Genoveva Vargas-Solar"
+    ],
+    "year": 2016,
+    "publication_date": "2016-08-28",
+    "venue": "Symposium on Advances in Databases and Information Systems",
+    "journal": "",
+    "citation_count": 5,
+    "url": "https://www.semanticscholar.org/paper/6aaafe50b44420f56dd9dccfe87cc941bf0c8798",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "311d8024831b7b805e6bb6f7e6e6c350240a4ea5",
+    "semantic_scholar_id": "311d8024831b7b805e6bb6f7e6e6c350240a4ea5",
+    "title": "Query Expansion for Survey Question Retrieval in the Social Sciences",
+    "abstract": "In recent years, the importance of research data and the need to archive and to share it in the scientific community have increased enormously. This introduces a whole new set of challenges for digital libraries. In the social sciences typical research data sets consist of surveys and questionnaires. In this paper we focus on the use case of social science survey question reuse and on mechanisms to support users in the query formulation for data sets. We describe and evaluate thesaurus- and co-occurrence-based approaches for query expansion to improve retrieval quality in digital libraries and research data archives. The challenge here is to translate the information need and the underlying sociological phenomena into proper queries. As we can show retrieval quality can be improved by adding related terms to the queries. In a direct comparison automatically expanded queries using extracted co-occurring terms can provide better results than queries manually reformulated by a domain expert and better results than a keyword-based BM25 baseline.",
+    "authors": [
+      "Nadine Dulisch",
+      "A. Kempf",
+      "Philipp Schaer"
+    ],
+    "year": 2015,
+    "publication_date": "2015-06-18",
+    "venue": "International Conference on Theory and Practice of Digital Libraries",
+    "journal": "",
+    "citation_count": 8,
+    "url": "https://www.semanticscholar.org/paper/311d8024831b7b805e6bb6f7e6e6c350240a4ea5",
+    "pdf_url": "https://hdl.handle.net/11108/219",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "dee89541feff018c45e4a2701e03efcd1d3d3fc5",
+    "semantic_scholar_id": "dee89541feff018c45e4a2701e03efcd1d3d3fc5",
+    "title": "Google's PageRank and beyond - the science of search engine rankings",
+    "abstract": null,
+    "authors": [
+      "A. Langville",
+      "C. D. Meyer"
+    ],
+    "year": 2006,
+    "publication_date": "2006-07-03",
+    "venue": "",
+    "journal": "",
+    "citation_count": 1587,
+    "url": "https://www.semanticscholar.org/paper/dee89541feff018c45e4a2701e03efcd1d3d3fc5",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "40fe61ec49dabd5f1efd9d761919311ee91e06a8",
+    "semantic_scholar_id": "40fe61ec49dabd5f1efd9d761919311ee91e06a8",
+    "title": "Attribute Based Secure Query Processing in Cloud with Privacy Homomorphism",
+    "abstract": null,
+    "authors": [
+      "Ms. Rupali",
+      "S.KHACHANE",
+      "Dr. Pradeep K.DESHMUKH"
+    ],
+    "year": 2015,
+    "publication_date": null,
+    "venue": "",
+    "journal": "",
+    "citation_count": 3,
+    "url": "https://www.semanticscholar.org/paper/40fe61ec49dabd5f1efd9d761919311ee91e06a8",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "e60fe8a9b9ca2210b15b92be5fb364798de73330",
+    "semantic_scholar_id": "e60fe8a9b9ca2210b15b92be5fb364798de73330",
+    "title": "Transformer for one stop interpretable cell type annotation",
+    "abstract": "Consistent annotation transfer from reference dataset to query dataset is fundamental to the development and reproducibility of single-cell research. Compared with traditional annotation methods, deep learning based methods are faster and more automated. A series of useful single cell analysis tools based on autoencoder architecture have been developed but these struggle to strike a balance between depth and interpretability. Here, we present TOSICA, a multi-head self-attention deep learning model based on Transformer that enables interpretable cell type annotation using biologically understandable entities, such as pathways or regulons. We show that TOSICA achieves fast and accurate one-stop annotation and batch-insensitive integration while providing biologically interpretable insights for understanding cellular behavior during development and disease progressions. We demonstrate TOSICA’s advantages by applying it to scRNA-seq data of tumor-infiltrating immune cells, and CD14+ monocytes in COVID-19 to reveal rare cell types, heterogeneity and dynamic trajectories associated with disease progression and severity. Developing computational tools for interpretable cell type annotation in scRNA-seq data remains challenging. Here the authors propose a Transformer-based model for interpretable annotation transfer using biologically understandable entities, and demonstrate its performance on large or atlas datasets.",
+    "authors": [
+      "Jiawei Chen",
+      "Hao Xu",
+      "Wanyu Tao",
+      "Zhaoxiong Chen",
+      "Yuxuan Zhao",
+      "Jing-Dong J. Han"
+    ],
+    "year": 2023,
+    "publication_date": "2023-01-14",
+    "venue": "Nature Communications",
+    "journal": "Nature Communications",
+    "citation_count": 134,
+    "url": "https://www.semanticscholar.org/paper/e60fe8a9b9ca2210b15b92be5fb364798de73330",
+    "pdf_url": "https://www.nature.com/articles/s41467-023-35923-4.pdf",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "78a48c296267ae59b4be60ebbbf96b5d7f6c693b",
+    "semantic_scholar_id": "78a48c296267ae59b4be60ebbbf96b5d7f6c693b",
+    "title": "Automating Customer Service using LangChain: Building custom open-source GPT Chatbot for organizations",
+    "abstract": "In the digital age, the dynamics of customer service are evolving, driven by technological advancements and the integration of Large Language Models (LLMs). This research paper introduces a groundbreaking approach to automating customer service using LangChain, a custom LLM tailored for organizations. The paper explores the obsolescence of traditional customer support techniques, particularly Frequently Asked Questions (FAQs), and proposes a paradigm shift towards responsive, context-aware, and personalized customer interactions. The heart of this innovation lies in the fusion of open-source methodologies, web scraping, fine-tuning, and the seamless integration of LangChain into customer service platforms. This open-source state-of-the-art framework, presented as\"Sahaay,\"demonstrates the ability to scale across industries and organizations, offering real-time support and query resolution. Key elements of this research encompass data collection via web scraping, the role of embeddings, the utilization of Google's Flan T5 XXL, Base and Small language models for knowledge retrieval, and the integration of the chatbot into customer service platforms. The results section provides insights into their performance and use cases, here particularly within an educational institution. This research heralds a new era in customer service, where technology is harnessed to create efficient, personalized, and responsive interactions. Sahaay, powered by LangChain, redefines the customer-company relationship, elevating customer retention, value extraction, and brand image. As organizations embrace LLMs, customer service becomes a dynamic and customer-centric ecosystem.",
+    "authors": [
+      "Keivalya Pandya",
+      "M. Holia"
+    ],
+    "year": 2023,
+    "publication_date": "2023-10-09",
+    "venue": "arXiv.org",
+    "journal": "ArXiv",
+    "citation_count": 87,
+    "url": "https://www.semanticscholar.org/paper/78a48c296267ae59b4be60ebbbf96b5d7f6c693b",
+    "pdf_url": "https://arxiv.org/pdf/2310.05421",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "ff5f86f2e54c356cec4b4004398f501776c29ffb",
+    "semantic_scholar_id": "ff5f86f2e54c356cec4b4004398f501776c29ffb",
+    "title": "Google Scholar to overshadow them all? Comparing the sizes of 12 academic search engines and bibliographic databases",
+    "abstract": "Information on the size of academic search engines and bibliographic databases (ASEBDs) is often outdated or entirely unavailable. Hence, it is difficult to assess the scope of specific databases, such as Google Scholar. While scientometric studies have estimated ASEBD sizes before, the methods employed were able to compare only a few databases. Consequently, there is no up-to-date comparative information on the sizes of popular ASEBDs. This study aims to fill this blind spot by providing a comparative picture of 12 of the most commonly used ASEBDs. In doing so, we build on and refine previous scientometric research by counting query hit data as an indicator of the number of accessible records. Iterative query optimization makes it possible to identify a maximum number of hits for most ASEBDs. The results were validated in terms of their capacity to assess database size by comparing them with official information on database sizes or previous scientometric studies. The queries used here are replicable, so size information can be updated quickly. The findings provide first-time size estimates of ProQuest and EbscoHost and indicate that Google Scholar’s size might have been underestimated so far by more than 50%. By our estimation Google Scholar, with 389 million records, is currently the most comprehensive academic search engine.",
+    "authors": [
+      "Michael Gusenbauer"
+    ],
+    "year": 2018,
+    "publication_date": "2018-11-10",
+    "venue": "Scientometrics",
+    "journal": "Scientometrics",
+    "citation_count": 566,
+    "url": "https://www.semanticscholar.org/paper/ff5f86f2e54c356cec4b4004398f501776c29ffb",
+    "pdf_url": "https://link.springer.com/content/pdf/10.1007/s11192-018-2958-5.pdf",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  },
+  {
+    "id": "6b18ffd074e7d85869e5a3aaaf44bb8bd327e47c",
+    "semantic_scholar_id": "6b18ffd074e7d85869e5a3aaaf44bb8bd327e47c",
+    "title": "All Your Queries Are Belong to Us: The Power of File-Injection Attacks on Searchable Encryption",
+    "abstract": null,
+    "authors": [
+      "Yupeng Zhang",
+      "Jonathan Katz",
+      "Charalampos Papamanthou"
+    ],
+    "year": 2016,
+    "publication_date": null,
+    "venue": "USENIX Security Symposium",
+    "journal": "",
+    "citation_count": 488,
+    "url": "https://www.semanticscholar.org/paper/6b18ffd074e7d85869e5a3aaaf44bb8bd327e47c",
+    "pdf_url": "",
+    "doi": "",
+    "arxiv_id": "",
+    "source": "semantic_scholar"
+  }
+]
