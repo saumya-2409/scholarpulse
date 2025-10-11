@@ -5,6 +5,4 @@ pandas>=2.0.0
 numpy>=1.24.0
 python-dateutil>=2.8.0
 plotly>=5.18.0
-
-# Optional - only if you want real arXiv integration
-# arxiv>=1.4.0
+arxiv>=1.4.0
