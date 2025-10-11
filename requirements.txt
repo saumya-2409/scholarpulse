@@ -1,0 +1,15 @@
+# Requirements for FAST Research Assistant
+# Minimal dependencies - no heavy AI models
+
+# Core Streamlit
+streamlit>=1.28.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Basic utilities
+python-dateutil>=2.8.0
+
+# Optional - only if you want real arXiv integration
+# arxiv>=1.4.0
+
+# That's it! Super lightweight and fast
