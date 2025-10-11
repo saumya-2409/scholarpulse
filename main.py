@@ -1504,7 +1504,7 @@ with st.sidebar:
         st.error("Please select at least one source!")
     
     # Show content extraction capabilities
-    if !BEAUTIFULSOUP_AVAILABLE:
+    if not BEAUTIFULSOUP_AVAILABLE:
         st.warning("⚠️ **Install BeautifulSoup for enhanced extraction:** `pip install beautifulsoup4`")
     
     # Start Analysis Button
