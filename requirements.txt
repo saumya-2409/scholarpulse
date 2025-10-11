@@ -1,8 +1,19 @@
 # Requirements for FAST Research Assistant
 
+# Core Streamlit app
 streamlit>=1.28.0
+
+# Data handling & visualization
 pandas>=2.0.0
 numpy>=1.24.0
-python-dateutil>=2.8.0
 plotly>=5.18.0
+
+# Networking & parsing
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Utilities
+python-dateutil>=2.8.0
+
+# For real arXiv integration
 arxiv>=1.4.0
