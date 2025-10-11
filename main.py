@@ -1055,7 +1055,7 @@ class IntelligentMultiSourceFetcher:
         all_papers = []
         source_results = {}
         
-        st.write("🔍 **Starting intelligent multi-source search...**")
+        st.write("🔍 **Starting multi-source search...**")
         
         # Phase 1: Fetch papers from sources
         for source in sources:
@@ -1093,7 +1093,7 @@ class IntelligentMultiSourceFetcher:
         
         # Phase 2: Intelligent access detection and content extraction
         if all_papers:
-            st.write("🧠 **Phase 2: Intelligent content access detection...**")
+            st.write("🧠 **Phase 2: Content access detection...**")
             
             processed_papers = []
             accessible_count = 0
@@ -1127,7 +1127,7 @@ class IntelligentMultiSourceFetcher:
             # Show access detection results
             st.markdown(f"""
             <div class="extraction-status">
-            <strong>🧠 Intelligent Access Analysis Complete:</strong><br>
+            <strong>🧠 Analysis Complete:</strong><br>
             📄 Total Papers: {len(processed_papers)}<br>
             ✅ Accessible Papers: {accessible_count}<br>
             📜 Content Extracted: {extracted_count}<br>
@@ -1458,7 +1458,7 @@ def render_suggested_paper(paper: Dict):
 st.markdown("""
 <div class="main-header">
     <h1>🧠 AI Research Assistant</h1>
-    <p>Intelligently Extract, Analyze, and Summarize Research Papers</p>
+    <p>Extract, Analyze, and Summarize Research Papers</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1469,17 +1469,17 @@ with st.sidebar:
     query = st.text_input(
         "Enter Research Topic",
         placeholder="e.g., machine learning transformers",
-        help="Enter keywords for intelligent analysis"
+        help="Enter research topics for analysis"
     )
     
     st.markdown("### 📚 Sources")
     
-    use_arxiv = st.checkbox("arXiv (Real API)", value=True, help="Real ArXiv papers with PDF access")
+    use_arxiv = st.checkbox("arXiv", value=True)
     if use_arxiv and not ARXIV_AVAILABLE:
         st.error("❌ ArXiv library missing! Install: `pip install arxiv`")
     
-    use_semantic = st.checkbox("Semantic Scholar (Enhanced)", value=True, help="Enhanced Semantic Scholar with access detection") 
-    use_google = st.checkbox("Google Scholar (Direct Links)", value=True, help="Google Scholar with direct repository links")
+    use_semantic = st.checkbox("Semantic Scholar", value=True) 
+    use_google = st.checkbox("Google Scholar", value=False)
     
     st.markdown("### 📊 Number of Papers")
     papers_per_source = st.slider("", 10, 100, 30, help="Papers to fetch per source")
@@ -1492,11 +1492,7 @@ with st.sidebar:
     
     if sources:
         expected_total = papers_per_source * len(sources)
-        st.success(f"🧠 Will intelligently analyze ~{expected_total} papers")
-        
-        # Show enhanced capabilities
-        st.info("✨ **Enhanced Features:**\n- Content extraction\n- Access detection\n- Direct paper links")
-        
+        st.success(f"🧠 Will analyze ~{expected_total} papers")
         source_names = []
         if use_arxiv: 
             source_names.append("ArXiv" + (" ✅" if ARXIV_AVAILABLE else " ❌"))
@@ -1508,13 +1504,11 @@ with st.sidebar:
         st.error("Please select at least one source!")
     
     # Show content extraction capabilities
-    if BEAUTIFULSOUP_AVAILABLE:
-        st.success("🧠 **Content Extraction:** Advanced HTML parsing available")
-    else:
+    if !BEAUTIFULSOUP_AVAILABLE:
         st.warning("⚠️ **Install BeautifulSoup for enhanced extraction:** `pip install beautifulsoup4`")
     
     # Start Analysis Button
-    if st.button("🚀 Start Intelligent Analysis", type="primary", disabled=st.session_state.processing or not sources or not query):
+    if st.button("🚀 Start Analysis", type="primary", disabled=st.session_state.processing or not sources or not query):
         if query.strip() and sources:
             st.session_state.processing = True
             
