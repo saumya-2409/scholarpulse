@@ -364,29 +364,13 @@ class IntelligentPaperAccessor:
         
         # Method 2: Check if paper URL leads to accessible content
         paper_url = paper.get('url', '')
-        if paper_url and not paper_url.startswith('https://scholar.google.com/scholar?q='):
+        if paper_url:
             access_methods.append(('direct_paper', paper_url))
         
         # Method 3: For Semantic Scholar, try alternative access
         if paper.get('source') == 'Semantic Scholar' and paper.get('semantic_scholar_id'):
             semantic_id = paper.get('semantic_scholar_id')
             access_methods.append(('semantic_alternative', f"https://www.semanticscholar.org/paper/{semantic_id}"))
-        
-        # Method 4: Generate better Google Scholar direct links
-        if paper.get('source') == 'Google Scholar':
-            title = paper.get('title', '')
-            authors = paper.get('authors', [])
-            if title and authors:
-                # Create specific search with title and author
-                search_query = f'"{title}" {authors[0]}'
-                encoded_query = quote(search_query)
-                better_url = f"https://scholar.google.com/scholar?q={encoded_query}"
-                access_methods.append(('google_scholar_specific', better_url))
-                
-                # Also try to find direct repository links
-                direct_urls = self._generate_direct_repository_urls(paper)
-                for url_type, url in direct_urls:
-                    access_methods.append((url_type, url))
         
         # Try to access and extract content
         extracted_content = None
@@ -415,28 +399,12 @@ class IntelligentPaperAccessor:
             # Use extracted content for better abstract
             if len(extracted_content) > len(paper.get('abstract', '')):
                 paper['enhanced_abstract'] = extracted_content[:1000]
-        else:
-            # Improve Google Scholar URLs to be more specific
-            if paper.get('source') == 'Google Scholar':
-                title = paper.get('title', '')
-                authors = paper.get('authors', [])
-                if title:
-                    if authors:
-                        search_query = f'"{title}" author:"{authors[0]}"'
-                    else:
-                        search_query = f'"{title}"'
-                    encoded_query = quote(search_query)
-                    paper['url'] = f"https://scholar.google.com/scholar?q={encoded_query}"
-        
+            
         return paper
     
     def _try_extract_content(self, url: str, method_name: str) -> Optional[str]:
         """Try to extract content from a URL"""
         try:
-            # Skip Google Scholar search URLs for content extraction
-            if 'scholar.google.com/scholar?q=' in url:
-                return None
-            
             response = self.session.get(url, timeout=10, allow_redirects=True)
             if response.status_code == 200:
                 content_type = response.headers.get('Content-Type', '').lower()
@@ -497,26 +465,6 @@ class IntelligentPaperAccessor:
         
         return None
     
-    def _generate_direct_repository_urls(self, paper: Dict) -> List[tuple]:
-        """Generate possible direct repository URLs for a paper"""
-        direct_urls = []
-        title = paper.get('title', '').lower()
-        year = paper.get('year', datetime.now().year)
-        
-        # Common repository patterns
-        if any(keyword in title for keyword in ['computer vision', 'machine learning', 'neural', 'deep learning']):
-            # Try arXiv pattern
-            arxiv_id = f"{year}.{random.randint(1000, 9999)}"
-            direct_urls.append(('arxiv_guess', f"https://arxiv.org/abs/{arxiv_id}"))
-        
-        # Try common DOI patterns
-        doi_suffix = f"{random.randint(1000, 9999)}/{random.randint(100000, 999999)}"
-        direct_urls.append(('ieee_doi', f"https://doi.org/10.1109/{doi_suffix}"))
-        direct_urls.append(('acm_doi', f"https://doi.org/10.1145/{doi_suffix}"))
-        direct_urls.append(('springer_doi', f"https://doi.org/10.1007/{doi_suffix}"))
-        
-        return direct_urls
-
 # ==================== ENHANCED CONTENT-AWARE SUMMARIZER ====================
 class EnhancedContentAwareSummarizer:
     """Enhanced summarizer that uses extracted content for better summaries"""
@@ -937,144 +885,6 @@ class SemanticScholarFetcher:
         st.warning("⚠️ **Semantic Scholar API**: Search failed. Check internet/API key.")
         return []
 
-# ==================== ENHANCED GOOGLE SCHOLAR FETCHER ====================
-class EnhancedGoogleScholarFetcher:
-    """Enhanced Google Scholar fetcher with direct repository links"""
-    
-    def search_papers(self, query: str, max_results: int = 50) -> List[Dict]:
-        papers = []
-        
-        title_templates = [
-            f"A Comprehensive Survey of {query.title()} Methods",
-            f"{query.title()}: Recent Advances and Future Directions", 
-            f"Deep Learning Approaches to {query.title()}",
-            f"{query.title()} in the Era of Big Data",
-            f"Scalable {query.title()} for Real-World Applications",
-            f"Towards Robust {query.title()}: Challenges and Solutions",
-            f"{query.title()} Using Transfer Learning",
-            f"Explainable {query.title()}: A Systematic Review",
-            f"Multi-modal {query.title()}: State-of-the-art",
-            f"{query.title()} with Neural Networks: A Review"
-        ]
-        
-        current_year = datetime.now().year
-        
-        for i in range(min(max_results, 40)):
-            title = title_templates[i % len(title_templates)]
-            if i >= len(title_templates):
-                title = f"{title} - Extended Analysis {i // len(title_templates) + 1}"
-                
-            year = random.choice([current_year, current_year-1, current_year-2, current_year-3])
-            authors = self._generate_authors(i)
-            
-            # Generate multiple possible access URLs
-            possible_urls = self._generate_repository_urls(query, title, authors, year, i)
-            
-            # Some papers might be accessible (40% chance)
-            has_access = random.random() < 0.4
-            
-            if has_access:
-                # Pick a direct repository URL
-                primary_url = random.choice(possible_urls['direct'])
-                pdf_available = True
-            else:
-                # Use Google Scholar search
-                search_query = f'"{title}" author:"{authors[0]}"' if authors else f'"{title}"'
-                encoded_query = quote(search_query)
-                primary_url = f"https://scholar.google.com/scholar?q={encoded_query}"
-                pdf_available = False
-            
-            paper = {
-                'id': f"gs_{hashlib.md5((query + title).encode()).hexdigest()[:10]}",
-                'title': title,
-                'abstract': f"This paper presents a comprehensive investigation of {query} methodologies. We introduce novel approaches that address key challenges in {query} applications, demonstrating significant improvements through systematic evaluation on benchmark datasets. Our work provides both theoretical insights and practical implementations for real-world deployment.",
-                'authors': authors,
-                'year': year,
-                'citations': max(0, random.randint(10, 200) - (current_year - year) * 10),
-                'url': primary_url,
-                'pdf_url': possible_urls.get('pdf') if has_access else None,
-                'alternative_urls': possible_urls['direct'] if not has_access else [],
-                'venue': self._generate_venue(i),
-                'source': 'Google Scholar',
-                'pdf_available': pdf_available,
-                'full_text': pdf_available,
-                'repository_type': 'direct' if has_access else 'search'
-            }
-            
-            papers.append(paper)
-        
-        papers.sort(key=lambda x: x.get('year', 0), reverse=True)
-        return papers
-    
-    def _generate_repository_urls(self, query: str, title: str, authors: List[str], year: int, index: int) -> Dict[str, List[str]]:
-        """Generate realistic repository URLs"""
-        
-        # Create realistic paper IDs
-        paper_hash = hashlib.md5(title.encode()).hexdigest()[:8]
-        
-        direct_urls = []
-        
-        # ArXiv URLs (if query suggests CS/ML topic)
-        if any(keyword in query.lower() for keyword in ['computer', 'machine', 'neural', 'deep', 'algorithm', 'data']):
-            arxiv_id = f"{year}.{random.randint(1000, 9999)}"
-            direct_urls.append(f"https://arxiv.org/abs/{arxiv_id}")
-        
-        # IEEE Xplore URLs
-        ieee_id = 8000000 + index + int(paper_hash[:6], 16) % 1000000
-        direct_urls.append(f"https://ieeexplore.ieee.org/document/{ieee_id}")
-        
-        # ACM Digital Library URLs
-        acm_id = f"3{random.randint(100000, 999999)}.{random.randint(3000000, 3999999)}"
-        direct_urls.append(f"https://dl.acm.org/doi/10.1145/{acm_id}")
-        
-        # Springer URLs
-        springer_id = f"s{random.randint(10000, 99999)}-{year}-{random.randint(1000, 9999)}-{random.randint(1, 9)}"
-        direct_urls.append(f"https://link.springer.com/article/10.1007/{springer_id}")
-        
-        # ResearchGate URLs
-        rg_id = 330000000 + index + random.randint(1000, 99999)
-        direct_urls.append(f"https://www.researchgate.net/publication/{rg_id}")
-        
-        # PDF URL (for ArXiv papers)
-        pdf_url = None
-        if direct_urls and 'arxiv.org' in direct_urls[0]:
-            arxiv_id = direct_urls[0].split('/')[-1]
-            pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
-        
-        return {
-            'direct': direct_urls,
-            'pdf': pdf_url
-        }
-    
-    def _generate_authors(self, index: int) -> List[str]:
-        first_names = ['John', 'Sarah', 'Michael', 'Emily', 'David', 'Anna', 'Robert', 'Lisa', 
-                      'James', 'Maria', 'William', 'Jennifer', 'Charles', 'Linda', 'Thomas', 'Elizabeth']
-        last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 
-                     'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Wilson', 'Anderson']
-        
-        num_authors = random.randint(2, 4)
-        authors = []
-        for i in range(num_authors):
-            first = first_names[(index * 3 + i) % len(first_names)]
-            last = last_names[(index * 2 + i) % len(last_names)]
-            authors.append(f"{first} {last}")
-        return authors
-    
-    def _generate_venue(self, index: int) -> str:
-        venues = [
-            "Nature Machine Intelligence",
-            "IEEE Transactions on Pattern Analysis and Machine Intelligence",
-            "International Conference on Machine Learning (ICML)",
-            "Neural Information Processing Systems (NeurIPS)",
-            "Conference on Computer Vision and Pattern Recognition (CVPR)",
-            "International Conference on Learning Representations (ICLR)",
-            "Journal of Machine Learning Research",
-            "Artificial Intelligence",
-            "ACM Computing Surveys",
-            "Science Advances"
-        ]
-        return venues[index % len(venues)]
-
 # ==================== INTELLIGENT MULTI-SOURCE FETCHER ====================
 class IntelligentMultiSourceFetcher:
     """Multi-source paper fetcher with intelligent access detection"""
@@ -1082,8 +892,7 @@ class IntelligentMultiSourceFetcher:
     def __init__(self):
         self.fetchers = {
             'arxiv': RealArxivFetcher(),
-            'semantic_scholar': SemanticScholarFetcher(),
-            'google_scholar': EnhancedGoogleScholarFetcher()
+            'semantic_scholar': SemanticScholarFetcher()
         }
         self.accessor = IntelligentPaperAccessor()
     
@@ -1207,15 +1016,6 @@ class IntelligentMultiSourceFetcher:
             </div>
             """, unsafe_allow_html=True)
         
-        with col3:
-            google_count = source_results.get('google_scholar', 0)
-            st.markdown(f"""
-            <div class="source-status">
-            <strong>🔍 Google Scholar</strong><br>
-            {google_count} papers
-            </div>
-            """, unsafe_allow_html=True)
-        
         duplicates_removed = total_before - total_after
         st.info(f"📊 **Final Summary:** {total_before} papers fetched → {total_after} unique papers (removed {duplicates_removed} duplicates)")
     
@@ -1287,10 +1087,7 @@ class IntelligentMultiSourceFetcher:
         # Source preference (real sources over simulated)
         source = paper.get('fetch_source', '')
         if source in ['arxiv', 'semantic_scholar']:
-            score += 3
-        elif source == 'google_scholar' and paper.get('repository_type') == 'direct':
-            score += 2
-        
+            score += 3        
         return score
 
 # ==================== CLUSTERING & GAP ANALYSIS (SAME AS BEFORE) ====================
@@ -1453,8 +1250,6 @@ def render_enhanced_paper_summary(paper: Dict, is_full_text: bool = True):
         access_type = paper.get('access_type', 'direct')
         if access_type == 'direct_pdf':
             st.markdown(f"[📄 **Access Paper (PDF)**]({working_url})")
-        elif access_type == 'google_scholar_specific':
-            st.markdown(f"[🔍 **Find on Google Scholar**]({working_url})")
         else:
             st.markdown(f"[🔗 **Access Full Paper**]({working_url})")
     
@@ -1516,7 +1311,6 @@ with st.sidebar:
         st.error("❌ ArXiv library missing! Install: `pip install arxiv`")
     
     use_semantic = st.checkbox("Semantic Scholar", value=True) 
-    use_google = st.checkbox("Google Scholar", value=False)
     
     st.markdown("### 📊 Number of Papers")
     papers_per_source = st.slider("", 10, 100, 30, help="Papers to fetch per source")
@@ -1525,7 +1319,6 @@ with st.sidebar:
     sources = []
     if use_arxiv: sources.append('arxiv')
     if use_semantic: sources.append('semantic_scholar')
-    if use_google: sources.append('google_scholar')
     
     if sources:
         expected_total = papers_per_source * len(sources)
@@ -1534,7 +1327,6 @@ with st.sidebar:
         if use_arxiv: 
             source_names.append("ArXiv" + (" ✅" if ARXIV_AVAILABLE else " ❌"))
         if use_semantic: source_names.append("Semantic Scholar ✅")
-        if use_google: source_names.append("Google Scholar ✅")
         
         st.markdown(f"🎯 **Sources:** {', '.join(source_names)}")
     else:
@@ -1583,13 +1375,8 @@ with st.sidebar:
                         if is_truly_accessible:
                             full_text_papers.append(paper)
                         else:
-                            # Only papers that are truly inaccessible go to suggested reading
-                            if not paper.get('url') or 'scholar.google.com/scholar?q=' in paper.get('url', ''):
-                                suggested_papers.append(paper)
-                            else:
-                                # Papers with direct URLs but no content extracted still get full treatment
-                                full_text_papers.append(paper)
-                    
+                            suggested_papers.append(paper)
+                           
                     summary_time = time.time() - start_time
                     st.success(f"✅ Generated {len(papers)} enhanced summaries in {summary_time:.1f}s")
                     
@@ -1849,7 +1636,7 @@ else:
         {
             'title': 'Select Enhanced Sources', 
             'description': 'Choose from real APIs with intelligent access detection capabilities',
-            'expected': f'ArXiv: {"✅" if ARXIV_AVAILABLE else "❌"}, Semantic Scholar: ✅, Google Scholar: ✅'
+            'expected': f'ArXiv: {"✅" if ARXIV_AVAILABLE else "❌"}, Semantic Scholar: ✅'
         },
         {
             'title': 'Set Paper Count',
