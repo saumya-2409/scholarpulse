@@ -720,7 +720,7 @@ class RealArxivFetcher:
                     'doi': result.doi,
                     'journal_ref': result.journal_ref,
                     'source': 'arXiv',
-                    'citations': random.randint(0, 150),
+                    'citations': None,
                     'pdf_available': True,
                     'full_text': True
                 }
