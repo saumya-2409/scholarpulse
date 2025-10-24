@@ -790,115 +790,152 @@ class RealArxivFetcher:
             return []
 
 # ==================== ENHANCED SEMANTIC SCHOLAR FETCHER ====================
-class EnhancedSemanticScholarFetcher:
-    """Enhanced Semantic Scholar API fetcher with better access detection"""
+# ==================== SEMANTIC SCHOLAR FETCHER WITH API KEY ====================
+class SemanticScholarFetcher:
+    """Semantic Scholar fetcher using your FREE API key - No rate limiting issues!"""
     
     def __init__(self):
         self.base_url = "https://api.semanticscholar.org/graph/v1"
-        self.rate_limit_delay = 2.0
+        self.api_key = "DiHAxNAV2Q9BrBDSeGK2W3r5dqegv4S86gdaD70Z"  # Your free API key
+        # API rate limit: 1 request per second
+        self.rate_limit_delay = 1.0  # Exactly 1 second per request
         self.last_request_time = 0
+        self.max_retries = 3  # Standard retries
     
     def _rate_limit(self):
+        """Enforce 1 request/second rate limit with small jitter"""
         current_time = time.time()
         time_since_last = current_time - self.last_request_time
         if time_since_last < self.rate_limit_delay:
-            time.sleep(self.rate_limit_delay - time_since_last)
+            sleep_time = self.rate_limit_delay - time_since_last + random.uniform(0.1, 0.3)  # Jitter for safety
+            time.sleep(sleep_time)
         self.last_request_time = time.time()
     
     def search_papers(self, query: str, max_results: int = 50) -> List[Dict]:
-        try:
-            self._rate_limit()
-            
-            search_url = f"{self.base_url}/paper/search"
-            
-            params = {
-                'query': query,
-                'limit': min(max_results, 50),
-                'fields': 'paperId,title,abstract,authors,year,citationCount,url,venue,openAccessPdf,publicationDate,externalIds'
-            }
-            
-            headers = {
-                'User-Agent': 'Research Assistant (educational use)',
-                'Accept': 'application/json'
-            }
-            
-            response = requests.get(search_url, params=params, headers=headers, timeout=15)
-            
-            if response.status_code == 429:
-                st.warning("⚠️ Semantic Scholar: Rate limited, using fewer papers")
-                time.sleep(5)
-                return []
-            elif response.status_code != 200:
-                st.warning(f"⚠️ Semantic Scholar API unavailable (status {response.status_code})")
-                return []
-            
-            data = response.json()
-            papers = []
-            
-            for paper_data in data.get('data', []):
-                if not paper_data.get('title'):
-                    continue
+        """Full search using API key - Reliable and unlimited within rate limits"""
+        
+        if not query:
+            return []
+        
+        # Use full max_results (no artificial limits)
+        max_results = min(max_results, 100)  # API allows up to 100
+        
+        for attempt in range(self.max_retries):
+            try:
+                self._rate_limit()  # 1 second delay
                 
-                authors = []
-                if paper_data.get('authors'):
-                    authors = [author.get('name', 'Unknown') for author in paper_data['authors']]
-                
-                # Enhanced PDF detection
-                pdf_url = None
-                pdf_available = False
-                
-                # Check multiple PDF sources
-                if paper_data.get('openAccessPdf') and paper_data['openAccessPdf'].get('url'):
-                    pdf_url = paper_data['openAccessPdf']['url']
-                    pdf_available = True
-                
-                # Check external IDs for additional access points
-                external_ids = paper_data.get('externalIds', {})
-                arxiv_id = external_ids.get('ArXiv')
-                doi = external_ids.get('DOI')
-                
-                # Generate semantic scholar URL
-                paper_id = paper_data.get('paperId', '')
-                url = f"https://www.semanticscholar.org/paper/{paper_id}" if paper_id else ''
-                
-                # Add alternative URLs
-                alternative_urls = []
-                if arxiv_id:
-                    alternative_urls.append(f"https://arxiv.org/abs/{arxiv_id}")
-                    if not pdf_url:
-                        pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
-                        pdf_available = True
-                
-                if doi:
-                    alternative_urls.append(f"https://doi.org/{doi}")
-                
-                paper = {
-                    'id': paper_id,
-                    'semantic_scholar_id': paper_id,
-                    'title': paper_data.get('title', ''),
-                    'abstract': paper_data.get('abstract', '')[:1000] if paper_data.get('abstract') else '',
-                    'authors': authors,
-                    'year': paper_data.get('year', datetime.now().year),
-                    'citations': paper_data.get('citationCount', 0),
-                    'url': url,
-                    'pdf_url': pdf_url,
-                    'alternative_urls': alternative_urls,
-                    'venue': paper_data.get('venue', ''),
-                    'source': 'Semantic Scholar',
-                    'pdf_available': pdf_available,
-                    'full_text': pdf_available,
-                    'arxiv_id': arxiv_id,
-                    'doi': doi
+                search_url = f"{self.base_url}/paper/search"
+                params = {
+                    'query': query,
+                    'limit': max_results,
+                    'fields': 'paperId,title,abstract,authors,year,citationCount,url,venue,openAccessPdf,externalIds,isOpenAccess'
                 }
                 
-                papers.append(paper)
+                headers = {
+                    'User-Agent': 'Research Assistant (B.Tech Project - Educational Use)',
+                    'Accept': 'application/json',
+                    'x-api-key': self.api_key  # Your API key here - enables 1 req/sec
+                }
+                
+                st.info(f"🔍 **Semantic Scholar (API)**: Searching... (1 req/sec limit)")
+                
+                response = requests.get(search_url, params=params, headers=headers, timeout=30)
+                
+                # Handle API responses
+                if response.status_code == 429:
+                    wait_time = 2 + (attempt * 2)  # Short backoff for rate limit
+                    st.warning(f"⚠️ **Semantic Scholar API**: Rate limited! Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+                
+                elif response.status_code != 200:
+                    if attempt == self.max_retries - 1:
+                        st.error(f"❌ **Semantic Scholar API**: Failed (Status {response.status_code}). Check API key.")
+                        return []
+                    continue
+                
+                # Success
+                data = response.json()
+                papers = []
+                
+                for paper_data in data.get('data', []):
+                    if not paper_data.get('title'):
+                        continue
+                    
+                    authors = [author.get('name', 'Unknown') for author in paper_data.get('authors', [])[:5]]
+                    
+                    # PDF and open access detection
+                    pdf_url = None
+                    pdf_available = False
+                    is_open_access = paper_data.get('isOpenAccess', False)
+                    
+                    open_access_pdf = paper_data.get('openAccessPdf')
+                    if open_access_pdf and open_access_pdf.get('url'):
+                        pdf_url = open_access_pdf['url']
+                        pdf_available = True
+                    
+                    # External IDs for alternative access
+                    external_ids = paper_data.get('externalIds', {})
+                    arxiv_id = external_ids.get('ArXiv')
+                    doi = external_ids.get('DOI')
+                    
+                    paper_id = paper_data.get('paperId', '')
+                    url = f"https://www.semanticscholar.org/paper/{paper_id}" if paper_id else ''
+                    
+                    alternative_urls = []
+                    if arxiv_id:
+                        alternative_urls.append(f"https://arxiv.org/abs/{arxiv_id}")
+                        if not pdf_url:
+                            pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
+                            pdf_available = True
+                    if doi:
+                        alternative_urls.append(f"https://doi.org/{doi}")
+                    
+                    paper = {
+                        'id': paper_id,
+                        'semantic_scholar_id': paper_id,
+                        'title': paper_data.get('title', ''),
+                        'abstract': paper_data.get('abstract', '')[:1000] if paper_data.get('abstract') else '',
+                        'authors': authors,
+                        'year': paper_data.get('year', datetime.now().year),
+                        'citations': paper_data.get('citationCount', 0),
+                        'url': url,
+                        'pdf_url': pdf_url,
+                        'alternative_urls': alternative_urls,
+                        'venue': paper_data.get('venue', ''),
+                        'source': 'Semantic Scholar (API)',
+                        'pdf_available': pdf_available,
+                        'full_text': pdf_available or is_open_access,
+                        'arxiv_id': arxiv_id,
+                        'doi': doi,
+                        'is_open_access': is_open_access
+                    }
+                    
+                    papers.append(paper)
+                
+                # Sort by year (recent first)
+                papers.sort(key=lambda x: x.get('year', 0), reverse=True)
+                
+                if papers:
+                    st.success(f"✅ **Semantic Scholar API**: {len(papers)} papers found (full access enabled)")
+                else:
+                    st.info("ℹ️ **Semantic Scholar API**: No papers found for this query")
+                
+                return papers
+                
+            except requests.exceptions.Timeout:
+                st.warning(f"⚠️ **Semantic Scholar API**: Timeout on attempt {attempt + 1}")
+                if attempt < self.max_retries - 1:
+                    time.sleep(2 * (attempt + 1))
+                continue
             
-            papers.sort(key=lambda x: x.get('year', 0), reverse=True)
-            return papers
-            
-        except Exception as e:
-            st.warning(f"⚠️ Semantic Scholar: {str(e)}")
-            return []
+            except Exception as e:
+                st.error(f"❌ **Semantic Scholar API**: Error - {str(e)}")
+                break
+        
+        # Fallback if all fails
+        st.warning("⚠️ **Semantic Scholar API**: Search failed. Check internet/API key.")
+        return []
 
 # ==================== ENHANCED GOOGLE SCHOLAR FETCHER ====================
 class EnhancedGoogleScholarFetcher:
@@ -1045,7 +1082,7 @@ class IntelligentMultiSourceFetcher:
     def __init__(self):
         self.fetchers = {
             'arxiv': RealArxivFetcher(),
-            'semantic_scholar': EnhancedSemanticScholarFetcher(),
+            'semantic_scholar': SemanticScholarFetcher(),
             'google_scholar': EnhancedGoogleScholarFetcher()
         }
         self.accessor = IntelligentPaperAccessor()
