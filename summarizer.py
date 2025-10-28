@@ -78,7 +78,7 @@ class FullPaperSummarizer:
     """
     Summarizer that processes whole papers (via PDF when available).
     """
-    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 10, api_key: str = None):
+    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 10, overlap: int = 200, api_key: str = None):
         """
         Initialize with optional API key override (uses secrets/env for Cloud/local).
         Sets up OpenAI client, PDF extraction, and chunking params.
@@ -86,6 +86,13 @@ class FullPaperSummarizer:
         self.model = model
         self.chunk_size = chunk_size
         self.max_chunks = max_chunks
+        self.overlap = overlap
+
+        # Ensure overlap doesn't exceed chunk_size to avoid issues
+        if self.overlap >= self.chunk_size:
+            self.overlap = int(self.chunk_size * 0.1)  # Fallback to 10% of chunk_size
+            print(f"[FullPaperSummarizer] Adjusted overlap to {self.overlap} (was >= chunk_size)")
+
         self.summary_schema = None  # Your existing line
         
         # PDF extraction flag (from global or requirements)
@@ -101,10 +108,7 @@ class FullPaperSummarizer:
         self.openai_enabled = False
         
         # Prioritize: Passed key > Streamlit secrets (Cloud) > Env var (local) > None
-        api_key = (api_key or 
-                   st.secrets.get("OPENAI_API_KEY") or   # Cloud secrets (secure)
-                   os.getenv("OPENAI_API_KEY") or           # Local env var
-                   OPENAI_API_KEY)
+        api_key = api_key or st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
         
         if api_key and OPENAI_AVAILABLE:  # No longer default hardcoded
             try:
@@ -325,7 +329,14 @@ class FullPaperSummarizer:
             end = min(L, start + self.chunk_size)
             chunk = text[start:end]
             chunks.append(chunk)
-            start = end - self.overlap  # overlap
+
+            #Advance with overlap, but ensure progress
+            step = max(1, self.chunk_size - self.overlap)  # Minimum step of 1 to avoid loops
+            start += step
+
+            if len(chunks) >= self.max_chunks:
+                break
+            
         return chunks
 
     def _compose_final_summary_from_chunks(self, meta: Dict[str, Any], chunk_summaries: List[str], timeout: int = 60, query: str = "") -> Optional[Dict[str, Any]]:
