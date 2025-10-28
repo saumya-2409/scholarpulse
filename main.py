@@ -1218,7 +1218,7 @@ with st.sidebar:
            
             with st.spinner("Generating enhanced AI summaries..."):
                 starttime = time.time()
-                summarizer = FullPaperSummarizer(api_key=None,model="gpt-4o-mini",chunk_size=3000,max_chunks=1.)  # Use your OpenAI model; set OPENAI_API_KEY env var
+                summarizer = FullPaperSummarizer(model="gpt-4o-mini",chunk_size=3000,max_chunks=10,overlap=200,api_key=None)  # Use your OpenAI model; set OPENAI_API_KEY env var
                 fulltextpapers = []
                 suggestedpapers = []
                 for paper in papers:
