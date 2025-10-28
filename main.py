@@ -21,7 +21,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import json
-from src.summarizer import FullPaperSummarizer
+from summarizer import FullPaperSummarizer
 
 from typing import List, Dict, Optional
 from datetime import datetime
