@@ -103,7 +103,7 @@ class FullPaperSummarizer:
         # Prioritize: Passed key > Streamlit secrets (Cloud) > Env var (local) > None
         api_key = (api_key or 
                    st.secrets.get("OPENAI_API_KEY") or   # Cloud secrets (secure)
-                   os.getenv("OPENAI_API_KEY")) or           # Local env var
+                   os.getenv("OPENAI_API_KEY") or           # Local env var
                    OPENAI_API_KEY)
         
         if api_key and OPENAI_AVAILABLE:  # No longer default hardcoded
