@@ -1023,10 +1023,13 @@ def render_enhanced_paper_summary(paper: Dict, is_full_text: bool = True):
     
     # Enhanced AI Summary
     summary = paper.get('ai_summary', {})
-    
-    if summary:
+    if not summary or not isinstance(summary, dict):
+        st.markdown("**Summary couldn't be extracted**")
+    elif "summary" in summary:
+        st.markdown(f"**{summary['summary']}**")
+    else:
         st.markdown("---")
-        st.markdown("###  ¤– Research Paper Summary")
+        st.markdown("### Research Paper Summary")
         
         sections = [
             ('1. Citation / Reference', 'citation'),
@@ -1234,10 +1237,8 @@ with st.sidebar:
                         else:
                             suggestedpapers.append(paper)
                     else:
-                        # Fallback to conservative summary if LLM fails/unavailable
-                        meta = summarizer._prepare_meta(paper)  # Private but accessible; prepare metadata
-                        conservative = summarizer.conservative_summary(meta, query=query)
-                        paper['ai_summary'] = conservative
+                        # Fallback: No conservative summary - just a simple placeholder
+                        paper['ai_summary'] = {"summary": "Summary couldn't be extracted"}
                         if isfulltext:
                             fulltextpapers.append(paper)
                         else:
@@ -1338,7 +1339,8 @@ if st.session_state.papers_data:
                 cluster_counts = []
                 for cluster_id, cluster_info in st.session_state.clusters.items():
                     cluster_names.append(cluster_info['name'])
-                    cluster_counts.append(cluster_info['paper_count'])
+                    cluster_counts.append(cluster_info.get('papercount', len(cluster_info.get('papers', []))))
+
                 
                 colors = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe', '#667eea', '#764ba2']
                 
