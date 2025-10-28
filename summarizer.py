@@ -185,13 +185,14 @@ class FullPaperSummarizer:
             abstract_summary = self._call_openai_on_abstract(meta, timeout=timeout // 2, query=query)
             if abstract_summary:
                 return abstract_summary
+        
         # Debug: Log summary structure
-        print(f"[DEBUG Summarize] OpenAI enabled: {self.openai_enabled}, PDF text len: {len(full_text) if 'full_text' in locals() else 0}")
-        print(f"[DEBUG Summarize] Raw summary keys: {list(summary.keys()) if summary else 'None'}")
-        if summary:
-            for key, val in summary.items():
+        print(f"[DEBUG Summarize] OpenAI enabled: {self.openai_enabled}, PDF text len: {len(extracted_text) if 'full_text' in locals() else 0}")
+        print(f"[DEBUG Summarize] Raw summary keys: {list(abstract_summary.keys()) if abstract_summary else 'None'}")
+        if abstract_summary:
+            for key, val in abstract_summary.items():
                 print(f"[DEBUG Summarize] {key}: {val[:100] if isinstance(val, str) else len(val) if isinstance(val, list) else 'None'}...")
-        return summary
+        return abstract_summary
 
         # Final fallback: Conservative (no LLM)
         return self.conservative_summary(meta, query=query)
@@ -505,8 +506,10 @@ class FullPaperSummarizer:
             'limitations_and_future_work': limitations if limitations else [f"Future directions suggested in abstract for {query_lower}."],
             'reusability_practical_value': reusability
         }
+    
+        print(f"[DEBUG Conservative] Generated keys: {list(summary.keys())}")
+        return summary
      
-     print(f"[DEBUG Conservative] Generated keys: {list(summary.keys())}")
-     return summary
+     
      
     
