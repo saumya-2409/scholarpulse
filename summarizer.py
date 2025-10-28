@@ -22,6 +22,7 @@ import tempfile
 import requests
 import re
 from typing import Dict, Any, Optional, List, Tuple
+import streamlit as st
 
 # Text extraction
 try:
@@ -79,42 +80,52 @@ class FullPaperSummarizer:
     """
     Summarizer that processes whole papers (via PDF when available).
     """
-
-    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 10, api_key: str = "OPENAI_API_KEY_REMOVED"):
+    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 10, api_key: str = None):
         """
-        Initialize FullPaperSummarizer.
-        - model: OpenAI model (e.g., 'gpt-4o-mini' for cost-effective).
-        - chunk_size: Max chars per chunk for full-text.
-        - Hardcoded api_key: Replace 'your_hardcoded_openai_api_key_here' with your actual key (e.g., 'OPENAI_API_KEY_REMOVED...').
-        WARNING: Hardcoding is insecureâ€”use os.getenv('OPENAI_API_KEY') for production.
+        Initialize with optional API key override (uses secrets/env for Cloud/local).
+        Sets up OpenAI client, PDF extraction, and chunking params.
         """
         self.model = model
         self.chunk_size = chunk_size
         self.max_chunks = max_chunks
-        self.overlap = 200  # Matches global CHUNK_OVERLAP
+        self.summary_schema = None  # Your existing line
         
-        # PDF handling (disabled if no PyPDF2, or set False for OpenAI-only)
-        self.pdf_enabled = PYPDF2_AVAILABLE  # Set to False if you want abstract-only always
+        # PDF extraction flag (from global or requirements)
+        try:
+            import PyPDF2
+            self.pdf_enabled = True
+        except ImportError:
+            self.pdf_enabled = False
+            print("[FullPaperSummarizer] PyPDF2 not available - PDF extraction disabled")
         
-        # OpenAI setup (only; no Gemini)
-        if OPENAI_AVAILABLE and api_key and api_key != "your_hardcoded_openai_api_key_here":
+        # OpenAI setup with multi-fallback key
+        self.client = None
+        self.openai_enabled = False
+        
+        # Prioritize: Passed key > Streamlit secrets (Cloud) > Env var (local) > None
+        api_key = (api_key or 
+                   st.secrets.get("OPENAI_API_KEY") or   # Cloud secrets (secure)
+                   os.getenv("OPENAI_API_KEY"))           # Local env var
+        
+        if api_key:  # No longer default hardcoded
             try:
                 self.client = openai.OpenAI(api_key=api_key)
+                # Validate key non-blockingly
+                self.client.models.list()  # Raises AuthenticationError if invalid
                 self.openai_enabled = True
+                print(f"[FullPaperSummarizer] OpenAI enabled with {self.model} (key valid, ends in {api_key[-4:]})")
+            except openai.AuthenticationError:
+                print("[FullPaperSummarizer] OpenAI auth failed (invalid key) - Using conservative summaries")
+                self.openai_enabled = False
             except Exception as e:
-                print(f"[FullPaperSummarizer] OpenAI init error: {e}")
-                self.client = None
+                print(f"[FullPaperSummarizer] OpenAI init error: {e} - Using conservative summaries")
                 self.openai_enabled = False
         else:
-            print("[FullPaperSummarizer] No valid OpenAI keyâ€”using conservative fallback only.")
-            self.client = None
+            print("[FullPaperSummarizer] No OpenAI key provided - Using conservative summaries only")
             self.openai_enabled = False
         
-        # Optional: Schema for JSON validation (if you have jsonschema)
-        if JSONSCHEMA_AVAILABLE:
-            self.summary_schema = SUMMARY_SCHEMA
-        else:
-            self.summary_schema = None
+        # Other initializations (add if missing in your class; e.g., for schema)
+        self.schema_loaded = False
 
     def _infer_domain(self, abstract: str, query: str) -> str:
         """
