@@ -2,16 +2,16 @@
 summarizer.py
 
 Full-paper summarizer that:
- - downloads PDF when available (open-access only),
- - extracts text (PyPDF2),
- - chunks text, summarizes each chunk via LLM,
- - composes a final structured summary (JSON) using the LLM,
- - falls back to a conservative non-hallucinating summary if LLM unavailable.
+- downloads PDF when available (open-access only),
+- extracts text (PyPDF2),
+- chunks text, summarizes each chunk via LLM,
+- composes a final structured summary (JSON) using the LLM,
+- falls back to a conservative non-hallucinating summary if LLM unavailable.
 
 Important:
- - Requires `openai` package + OPENAI_API_KEY for LLM summarization.
- - Requires `PyPDF2` and `requests` to download & parse PDFs.
- - Do not hardcode your OpenAI key in files; use env var OPENAI_API_KEY.
+- Requires `openai` package + OPENAI_API_KEY for LLM summarization.
+- Requires `PyPDF2` and `requests` to download & parse PDFs.
+- Do not hardcode your OpenAI key in files; use env var OPENAI_API_KEY.
 """
 
 import os
@@ -21,6 +21,7 @@ import time
 import tempfile
 import requests
 import re
+import random
 from typing import Dict, Any, Optional, List, Tuple
 import streamlit as st
 
@@ -51,6 +52,28 @@ DEFAULT_MODEL = "gpt-4o-mini"  # change if you have other model access
 CHUNK_CHAR_SIZE = 3000  # characters per chunk for LLM summarization (tune as needed)
 CHUNK_OVERLAP = 200
 
+from openai import RateLimitError
+
+def retry_with_backoff(func, initial_delay: float = 1, max_delay: float = 60, max_retries: int = 6):
+    """Custom exponential backoff retry for OpenAI calls (no external libs needed)."""
+    def wrapper(*args, **kwargs):
+        num_retries = 0
+        delay = initial_delay
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except RateLimitError as e:
+                num_retries += 1
+                if num_retries > max_retries:
+                    raise Exception(f"Max retries ({max_retries}) exceeded for {func.__name__}: {e}")
+                # Exponential backoff with jitter
+                delay = min(delay * 2 * (1 + random.random()), max_delay)
+                print(f"[Rate Limit] Retrying in {delay:.1f}s (attempt {num_retries}/{max_retries})")
+                time.sleep(delay)
+            except Exception as e:
+                raise e  # Re-raise non-rate-limit errors
+        return wrapper
+
 # Schema for the final structured summary
 SUMMARY_SCHEMA = {
     "type": "object",
@@ -73,12 +96,11 @@ SUMMARY_SCHEMA = {
     "required": ["title", "abstract", "authors", "source", "url", "results_and_key_findings", "limitations_and_future_work"]
 }
 
-
 class FullPaperSummarizer:
     """
     Summarizer that processes whole papers (via PDF when available).
     """
-    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 10, overlap: int = 200, api_key: str = None):
+    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):  ### UPDATED: Default max_chunks=5 for free tier
         """
         Initialize with optional API key override (uses secrets/env for Cloud/local).
         Sets up OpenAI client, PDF extraction, and chunking params.
@@ -87,14 +109,15 @@ class FullPaperSummarizer:
         self.chunk_size = chunk_size
         self.max_chunks = max_chunks
         self.overlap = overlap
+        self.request_delay = 1  # 1s delay between requests for free tier RPM limits
 
         # Ensure overlap doesn't exceed chunk_size to avoid issues
         if self.overlap >= self.chunk_size:
             self.overlap = int(self.chunk_size * 0.1)  # Fallback to 10% of chunk_size
             print(f"[FullPaperSummarizer] Adjusted overlap to {self.overlap} (was >= chunk_size)")
 
-        self.summary_schema = None  # Your existing line
-        
+        self.summary_schema = SUMMARY_SCHEMA  # FIXED: Use the global schema directly
+
         # PDF extraction flag (from global or requirements)
         try:
             import PyPDF2
@@ -128,7 +151,7 @@ class FullPaperSummarizer:
             self.openai_enabled = False
         
         # Other initializations (add if missing in your class; e.g., for schema)
-        self.schema_loaded = False
+        self.schema_loaded = True  # Assume schema is ready
 
     def _infer_domain(self, abstract: str, query: str) -> str:
         """
@@ -176,7 +199,9 @@ class FullPaperSummarizer:
                 extracted_text = None
         
         if extracted_text:
-            chunk_summaries = self._chunk_and_summarize(extracted_text, meta, timeout=timeout // 2, query=query)
+            # ### NEW: Cap chunks at 5 for free tier to limit API calls
+            chunks = self._chunk_text(extracted_text)[:5]
+            chunk_summaries = self._chunk_and_summarize(chunks, meta, timeout=timeout // 2, query=query)  # Pass chunks directly
             if chunk_summaries:
                 final_summary = self._compose_final_summary_from_chunks(meta, chunk_summaries, timeout // 2, query=query)
                 # DEBUG
@@ -194,33 +219,36 @@ class FullPaperSummarizer:
                 for k, v in abstract_summary.items():
                     print(f"[DEBUG Summarize] {k}: {repr(v)[:200]}")
                 return abstract_summary
-        
 
         # Final fallback: Just return a single summary line rather than structured fallback
         return {"summary": "Summary couldn't be extracted"}
 
-    def _chunk_and_summarize(self, text: str, meta: Dict[str, Any], timeout: int = 60, query: str = "") -> List[str]:
+    # ### UPDATED: Renamed and modified to accept chunks list; wrapped OpenAI call
+    @retry_with_backoff
+    def _chunk_and_summarize(self, chunks: List[str], meta: Dict[str, Any], timeout: int = 60, query: str = "") -> List[str]:
         """
-        Split text into chunks and summarize each with LLM, tying to query.
+        Summarize each chunk with LLM, tying to query.
         Returns list of chunk summaries.
         """
-        # Chunk text (keep your existing logic, e.g., by sentences/words)
-        chunks = self._chunk_text(text)
         chunk_summaries = []
         
         for i, chunk in enumerate(chunks):
             if len(chunk_summaries) >= self.max_chunks:  # Limit chunks
                 break
             
-            # LLM call on chunk with query context
+            # ### NEW: Delay before call
+            time.sleep(self.request_delay)
+            
+            # LLM call on chunk with query context (truncate for TPM)
             try:
                 userprompt = (
                     f"Paper title: {meta.get('title', 'Untitled')}\n"
                     f"Search query context: Relate to '{query or 'general research'}' if relevant (e.g., highlight stock prediction aspects).\n"
                     f"Summarize this chunk in 3-5 specific sentences: Extract key ideas, methods, results, or limitations. "
                     f"Use real details/numbers from text. No invention or generics."
-                    f"\nChunk {i+1}: {chunk}"
+                    f"\nChunk {i+1}: {chunk[:1500]}"  # ### NEW: Truncate to 1500 chars for free tier TPM
                 )
+                # Wrapped by decorator above
                 response = self.client.chat.completions.create(
                     model=self.model,
                     messages=[{"role": "user", "content": userprompt}],
@@ -230,7 +258,8 @@ class FullPaperSummarizer:
                 )
                 summary = response.choices[0].message.content.strip()
                 chunk_summaries.append(summary)
-                time.sleep(0.5)  # Rate limit
+                # ### UPDATED: Increased delay after successful call (free tier safe)
+                time.sleep(self.request_delay + 0.5)
             except Exception as e:
                 print(f"[FullPaperSummarizer] Chunk {i} error: {e}")
                 chunk_summaries.append(f"Summary unavailable for chunk {i}.")  # Fallback
@@ -321,24 +350,29 @@ class FullPaperSummarizer:
         """Split text into overlapping chunks of approx chunk_size characters."""
         if not text:
             return []
+        
         text = text.strip()
         chunks = []
         start = 0
         L = len(text)
+
         while start < L:
             end = min(L, start + self.chunk_size)
             chunk = text[start:end]
             chunks.append(chunk)
 
-            #Advance with overlap, but ensure progress
+            # Advance with overlap, but ensure progress
             step = max(1, self.chunk_size - self.overlap)  # Minimum step of 1 to avoid loops
             start += step
 
             if len(chunks) >= self.max_chunks:
                 break
-            
+        
+        print(f"[Chunking] Created {len(chunks)} chunks (capped at {self.max_chunks} for rate limits)")   
         return chunks
 
+    # ### UPDATED: Wrapped with decorator and added delay
+    @retry_with_backoff
     def _compose_final_summary_from_chunks(self, meta: Dict[str, Any], chunk_summaries: List[str], timeout: int = 60, query: str = "") -> Optional[Dict[str, Any]]:
         """
         Compose chunk summaries into final structured JSON, with query relevance.
@@ -347,6 +381,9 @@ class FullPaperSummarizer:
         
         if not aggregated:
             return None
+        
+        # ### NEW: Delay before call
+        time.sleep(self.request_delay)
         
         try:
             user = (
@@ -357,7 +394,7 @@ class FullPaperSummarizer:
                 f"Authors: {', '.join(meta.get('authors', []))}\nYear: {meta.get('year', 'N/A')}\n"
                 f"Source: {meta.get('source', 'arXiv/Semantic')}\nURL: {meta.get('url', '')}\n"
                 f"Abstract: {meta.get('abstract', '')}\n\n"
-                f"CHUNK SUMMARIES (extract ONLY from these - no external knowledge or invention):\n{aggregated}\n\n"
+                f"CHUNK SUMMARIES (extract ONLY from these - no external knowledge or invention):\n{aggregated[:4000]}\n\n"  # ### NEW: Truncate aggregated to 4000 chars for TPM
                 "Output ONLY a valid JSON object with these exact keys:\n"
                 "- title: string (from metadata)\n"
                 "- abstract: string (from metadata)\n"
@@ -376,6 +413,7 @@ class FullPaperSummarizer:
                 "Vary phrasing per paper; use real examples/numbers/sentences from chunks/metadata. Set to null/empty array if absent. No extra text."
             )
             
+            # Wrapped by decorator above
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": user}],
@@ -390,6 +428,8 @@ class FullPaperSummarizer:
                 final_summary = json.loads(summary_json_str)
                 if JSONSCHEMA_AVAILABLE:  # If you have schema validation
                     validate(instance=final_summary, schema=self.summary_schema)  # Assume schema exists
+                # ### NEW: Log response headers for rate limit debugging (free tier)
+                print(f"[Rate Debug] Remaining requests: {response.headers.get('x-ratelimit-remaining-requests', 'N/A')}")
                 return final_summary
             except (json.JSONDecodeError, ValidationError) as e:
                 print(f"[FullPaperSummarizer] JSON parse/validation error: {e}")
@@ -399,6 +439,8 @@ class FullPaperSummarizer:
             print(f"[FullPaperSummarizer] Composition error: {e}")
             return None
 
+    # ### UPDATED: Wrapped with decorator and added delay
+    @retry_with_backoff
     def _call_openai_on_abstract(self, meta: Dict[str, Any], timeout: int = 60, query: str = "") -> Optional[Dict[str, Any]]:
         """
         Use LLM to summarize abstract only, with query context.
@@ -408,15 +450,19 @@ class FullPaperSummarizer:
         if not abstract or not self.openai_enabled:
             return None
         
+        # ### NEW: Delay before call
+        time.sleep(self.request_delay)
+        
         try:
             user = (
                 f"QUERY: Relate to '{query or 'general research'}' (e.g., emphasize stock prediction relevance).\n\n"
                 f"PAPER: Title: {meta.get('title')}, Authors: {', '.join(meta.get('authors', []))}, Year: {meta.get('year')}\n"
-                f"Abstract: {abstract}\n\n"
+                f"Abstract: {abstract[:2000]}\n\n"  # ### NEW: Truncate abstract to 2000 chars for TPM
                 "Summarize in JSON: Use same keys as _compose_final_summary_from_chunks (title/authors/etc., problem_statement, etc.). "
                 "Extract directly from abstract; vary fields with query ties. JSON only."
             )
             
+            # Wrapped by decorator above
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": user}],
@@ -424,6 +470,9 @@ class FullPaperSummarizer:
                 temperature=0.3,
                 timeout=timeout
             )
+            
+            # ### NEW: Log response headers
+            print(f"[Rate Debug] Remaining requests: {response.headers.get('x-ratelimit-remaining-requests', 'N/A')}")
             
             json_str = response.choices[0].message.content.strip()
             summary = json.loads(json_str)
@@ -499,7 +548,7 @@ class FullPaperSummarizer:
             if query else "The methods and results are reusable in related research areas for broader impact."
         )
         
-        return {
+        summary = {  # ### FIXED: Return 'summary' var
             'title': title,
             'abstract': abstract,
             'authors': meta.get('authors', []),
@@ -515,7 +564,6 @@ class FullPaperSummarizer:
             'limitations_and_future_work': limitations if limitations else [f"Future directions suggested in abstract for {query_lower}."],
             'reusability_practical_value': reusability
         }
-    
+        
         print(f"[DEBUG Conservative] Generated keys: {list(summary.keys())}")
         return summary
-     
