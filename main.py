@@ -1389,6 +1389,7 @@ if st.session_state.papers_data:
             for cluster_id, cluster_info in st.session_state.clusters.items():
                 # Filter papers to those relevant to query (simple keyword match for safety)
                 relevant_papers = [p for p in cluster_info['papers'] if any(word in (p.get('title', '') + p.get('abstract', '')).lower() for word in query.lower().split())]
+                paper_count = len(relevant_papers)  # Safe count from filtered papers list
                 extracted_in_cluster = len([p for p in relevant_papers if p.get('extracted_content')])  # Update count
                 cluster_info['papers'] = relevant_papers  # Override for display
                 
@@ -1398,7 +1399,7 @@ if st.session_state.papers_data:
                     <p style="color: #64748b; margin-bottom: 1rem;">{cluster_info['description']}</p>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <span style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; color: #475569;">
-                             “{cluster_info['paper_count']} papers
+                             “{paper_count} papers
                         </span>
                         <span style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; color: #475569;">
                              {extracted_in_cluster} content extracted
