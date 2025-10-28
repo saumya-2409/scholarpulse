@@ -27,13 +27,8 @@ from typing import List, Dict, Optional
 from datetime import datetime
 from collections import Counter
 from urllib.parse import quote, urljoin, urlparse
-from pypdf import PdfReader
 
-try:
-    from pypdf import PdfReader
-    PYPDF_AVAILABLE = True
-except ImportError:
-    PYPDF_AVAILABLE = False
+PYPDF_AVAILABLE = False  # Default; not used in main.py
 import io  # For BytesIO
 
 # Suppress all warnings
