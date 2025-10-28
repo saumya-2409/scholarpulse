@@ -4,14 +4,14 @@ summarizer.py
 Full-paper summarizer that:
 - downloads PDF when available (open-access only),
 - extracts text (PyPDF2),
-- chunks text, summarizes each chunk via LLM,
-- composes a final structured summary (JSON) using the LLM,
-- falls back to a conservative non-hallucinating summary if LLM unavailable.
+- chunks text, summarizes each chunk via Hugging Face free API (replaces OpenAI for quota issues),
+- composes a final structured summary (JSON) using HF + rule-based filling,
+- falls back to a conservative non-hallucinating summary if API unavailable.
 
 Important:
-- Requires `openai` package + OPENAI_API_KEY for LLM summarization.
-- Requires `PyPDF2` and `requests` to download & parse PDFs.
-- Do not hardcode your OpenAI key in files; use env var OPENAI_API_KEY.
+- Requires `requests` for HF API (already in requirements).
+- Set HUGGINGFACE_API_TOKEN in Streamlit secrets.
+- OpenAI disabled for quota issues.
 """
 
 import os
@@ -39,7 +39,7 @@ try:
 except ImportError:
     JSONSCHEMA_AVAILABLE = False
 
-# OpenAI client
+# OpenAI client (kept for compatibility but disabled)
 try:
     import openai
     OPENAI_AVAILABLE = True
@@ -48,14 +48,14 @@ except ImportError:
 
 OPENAI_API_KEY = None
 
-DEFAULT_MODEL = "gpt-4o-mini"  # change if you have other model access
-CHUNK_CHAR_SIZE = 3000  # characters per chunk for LLM summarization (tune as needed)
+DEFAULT_MODEL = "gpt-4o-mini"  # Unused now; for legacy
+CHUNK_CHAR_SIZE = 3000  # characters per chunk for summarization (tune as needed)
 CHUNK_OVERLAP = 200
 
-from openai import RateLimitError
+from openai import RateLimitError  # For legacy; now used for HF too
 
 def retry_with_backoff(func, initial_delay: float = 1, max_delay: float = 60, max_retries: int = 6):
-    """Custom exponential backoff retry for OpenAI calls (no external libs needed)."""
+    """Custom exponential backoff retry for API calls (OpenAI or HF)."""
     def wrapper(*args, **kwargs):
         num_retries = 0
         delay = initial_delay
@@ -70,11 +70,21 @@ def retry_with_backoff(func, initial_delay: float = 1, max_delay: float = 60, ma
                 delay = min(delay * 2 * (1 + random.random()), max_delay)
                 print(f"[Rate Limit] Retrying in {delay:.1f}s (attempt {num_retries}/{max_retries})")
                 time.sleep(delay)
+            except requests.exceptions.HTTPError as e:  ### NEW: Handle HF 429
+                if e.response and e.response.status_code == 429:
+                    num_retries += 1
+                    if num_retries > max_retries:
+                        raise Exception(f"Max retries exceeded for HF: {e}")
+                    delay = min(delay * 2 * (1 + random.random()), max_delay)
+                    print(f"[HF Rate Limit] Retrying in {delay:.1f}s (attempt {num_retries}/{max_retries})")
+                    time.sleep(delay)
+                else:
+                    raise e
             except Exception as e:
                 raise e  # Re-raise non-rate-limit errors
         return wrapper
 
-# Schema for the final structured summary
+# Schema for the final structured summary (unchanged)
 SUMMARY_SCHEMA = {
     "type": "object",
     "properties": {
@@ -100,25 +110,25 @@ class FullPaperSummarizer:
     """
     Summarizer that processes whole papers (via PDF when available).
     """
-    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):  ### UPDATED: Default max_chunks=5 for free tier
+    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):
         """
         Initialize with optional API key override (uses secrets/env for Cloud/local).
-        Sets up OpenAI client, PDF extraction, and chunking params.
+        Sets up HF client (OpenAI disabled), PDF extraction, and chunking params.
         """
-        self.model = model
+        self.model = model  # Unused now
         self.chunk_size = chunk_size
         self.max_chunks = max_chunks
         self.overlap = overlap
-        self.request_delay = 1  # 1s delay between requests for free tier RPM limits
+        self.request_delay = 1  # 1s delay between requests for free tier limits
 
         # Ensure overlap doesn't exceed chunk_size to avoid issues
         if self.overlap >= self.chunk_size:
             self.overlap = int(self.chunk_size * 0.1)  # Fallback to 10% of chunk_size
             print(f"[FullPaperSummarizer] Adjusted overlap to {self.overlap} (was >= chunk_size)")
 
-        self.summary_schema = SUMMARY_SCHEMA  # FIXED: Use the global schema directly
+        self.summary_schema = SUMMARY_SCHEMA
 
-        # PDF extraction flag (from global or requirements)
+        # PDF extraction flag (unchanged)
         try:
             import PyPDF2
             self.pdf_enabled = True
@@ -126,31 +136,21 @@ class FullPaperSummarizer:
             self.pdf_enabled = False
             print("[FullPaperSummarizer] PyPDF2 not available - PDF extraction disabled")
         
-        # OpenAI setup with multi-fallback key
+        # ### NEW/UPDATED: Disable OpenAI for quota issues; add HF setup
         self.client = None
-        self.openai_enabled = False
+        self.openai_enabled = False  # Force disable
+        print("[FullPaperSummarizer] OpenAI disabled due to quota - Using HF or conservative")
         
-        # Prioritize: Passed key > Streamlit secrets (Cloud) > Env var (local) > None
-        api_key = api_key or st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
-        
-        if api_key and OPENAI_AVAILABLE:  # No longer default hardcoded
-            try:
-                self.client = openai.OpenAI(api_key=api_key)
-                # Validate key non-blockingly
-                self.client.models.list()  # Raises AuthenticationError if invalid
-                self.openai_enabled = True
-                print(f"[FullPaperSummarizer] OpenAI enabled with {self.model} (key valid, ends in {api_key[-4:]})")
-            except openai.AuthenticationError:
-                print("[FullPaperSummarizer] OpenAI auth failed (invalid key) - Using conservative summaries")
-                self.openai_enabled = False
-            except Exception as e:
-                print(f"[FullPaperSummarizer] OpenAI init error: {e} - Using conservative summaries")
-                self.openai_enabled = False
+        # Hugging Face setup (from secrets/env)
+        self.hf_token = st.secrets.get("HUGGINGFACE_API_TOKEN") or os.getenv("HUGGINGFACE_API_TOKEN")
+        self.hf_model = "facebook/bart-large-cnn"  # Free summarization model (good for abstracts/chunks)
+        self.hf_enabled = bool(self.hf_token)
+        if self.hf_enabled:
+            print(f"[FullPaperSummarizer] Hugging Face enabled with {self.hf_model}")
         else:
-            print("[FullPaperSummarizer] No OpenAI key provided - Using conservative summaries only")
-            self.openai_enabled = False
+            print("[FullPaperSummarizer] No HF token - Using conservative summaries only")
         
-        # Other initializations (add if missing in your class; e.g., for schema)
+        # Other initializations
         self.schema_loaded = True  # Assume schema is ready
 
     def _infer_domain(self, abstract: str, query: str) -> str:
@@ -184,7 +184,7 @@ class FullPaperSummarizer:
     def summarize_paper(self, paper: Dict[str, Any], use_full_text: bool = True, timeout: int = 120, query: str = "") -> Dict[str, Any]:
         """
         Summarize a paper using full text if available (via PDF), or abstract.
-        Now accepts query for relevance highlighting.
+        Now uses HF for free summarization; falls back to conservative.
         """
         meta = self._prepare_meta(paper)  # Assume this exists; extracts title/abstract/etc.
         if not meta:
@@ -199,35 +199,72 @@ class FullPaperSummarizer:
                 extracted_text = None
         
         if extracted_text:
-            # ### NEW: Cap chunks at 5 for free tier to limit API calls
+            # Cap chunks at 5 for free tier to limit API calls
             chunks = self._chunk_text(extracted_text)[:5]
             chunk_summaries = self._chunk_and_summarize(chunks, meta, timeout=timeout // 2, query=query)  # Pass chunks directly
             if chunk_summaries:
                 final_summary = self._compose_final_summary_from_chunks(meta, chunk_summaries, timeout // 2, query=query)
                 # DEBUG
-                print(f"[DEBUG Summarize] Used PDF, OpenAI enabled: {self.openai_enabled}; final_summary keys: {list(final_summary.keys()) if final_summary else None}")
+                print(f"[DEBUG Summarize] Used HF PDF, enabled: {self.hf_enabled}; final_summary keys: {list(final_summary.keys()) if final_summary else None}")
                 if final_summary:
                     for k, v in final_summary.items():
                         print(f"[DEBUG Summarize] {k}: {repr(v)[:200]}")
                 return final_summary
         
-        # No full text: Use OpenAI on abstract (your preference)
-        if self.openai_enabled:
-            abstract_summary = self._call_openai_on_abstract(meta, timeout=timeout // 2, query=query)
-            print(f"[DEBUG Summarize] Used abstract LLM, OpenAI enabled: {self.openai_enabled}; abstract_summary keys: {list(abstract_summary.keys()) if abstract_summary else None}")
+        # No full text: Use HF on abstract
+        if self.hf_enabled:
+            abstract_summary = self._summarize_abstract(meta, timeout=timeout // 2, query=query)  ### UPDATED: Renamed method
+            print(f"[DEBUG Summarize] Used HF abstract, enabled: {self.hf_enabled}; abstract_summary keys: {list(abstract_summary.keys()) if abstract_summary else None}")
             if abstract_summary:
                 for k, v in abstract_summary.items():
                     print(f"[DEBUG Summarize] {k}: {repr(v)[:200]}")
                 return abstract_summary
 
-        # Final fallback: Just return a single summary line rather than structured fallback
-        return {"summary": "Summary couldn't be extracted"}
+        # ### UPDATED: Direct fallback to conservative (no OpenAI check)
+        return self.conservative_summary(meta, query)
 
-    # ### UPDATED: Renamed and modified to accept chunks list; wrapped OpenAI call
+    # ### NEW: Core HF summarization method
     @retry_with_backoff
+    def _hf_summarize(self, text: str, query: str = "") -> str:
+        """Summarize text via HF free API (with backoff for 429s)."""
+        if not self.hf_enabled or not text:
+            return ""
+        
+        time.sleep(self.request_delay)  # Delay before call
+        
+        # Truncate for HF free limits (~512 tokens input)
+        short_text = f"Query: {query}\nText: {text[:1024]}" if query else text[:1024]
+        payload = {
+            "inputs": short_text,
+            "parameters": {"max_length": 150, "min_length": 30, "do_sample": False}  # Short, factual output
+        }
+        headers = {"Authorization": f"Bearer {self.hf_token}"}
+        
+        response = requests.post(
+            f"https://api-inference.huggingface.co/models/{self.hf_model}",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if isinstance(result, list) and result:
+                summary = result[0].get('summary_text', '').strip()
+                print(f"[HF Debug] Success: {summary[:50]}...")  # Log snippet
+                return summary
+            print(f"[HF Debug] Empty response for input length {len(short_text)}")
+            return ""
+        elif response.status_code == 429:
+            raise RateLimitError("HF rate limit hit")  # Triggers backoff
+        else:
+            print(f"[HF Error] {response.status_code}: {response.text[:100]}")
+            return ""
+
+    # ### UPDATED: Use HF instead of OpenAI; keep structure
     def _chunk_and_summarize(self, chunks: List[str], meta: Dict[str, Any], timeout: int = 60, query: str = "") -> List[str]:
         """
-        Summarize each chunk with LLM, tying to query.
+        Summarize each chunk with HF, tying to query.
         Returns list of chunk summaries.
         """
         chunk_summaries = []
@@ -236,37 +273,26 @@ class FullPaperSummarizer:
             if len(chunk_summaries) >= self.max_chunks:  # Limit chunks
                 break
             
-            # ### NEW: Delay before call
-            time.sleep(self.request_delay)
-            
-            # LLM call on chunk with query context (truncate for TPM)
+            # HF call on chunk (truncate for limits)
             try:
                 userprompt = (
                     f"Paper title: {meta.get('title', 'Untitled')}\n"
-                    f"Search query context: Relate to '{query or 'general research'}' if relevant (e.g., highlight stock prediction aspects).\n"
-                    f"Summarize this chunk in 3-5 specific sentences: Extract key ideas, methods, results, or limitations. "
-                    f"Use real details/numbers from text. No invention or generics."
-                    f"\nChunk {i+1}: {chunk[:1500]}"  # ### NEW: Truncate to 1500 chars for free tier TPM
+                    f"Search query context: Relate to '{query or 'general research'}' if relevant.\n"
+                    f"Summarize in 3-5 sentences: {chunk[:1500]}"  # Keep your truncation
                 )
-                # Wrapped by decorator above
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[{"role": "user", "content": userprompt}],
-                    max_tokens=200,
-                    temperature=0.3,
-                    timeout=timeout
-                )
-                summary = response.choices[0].message.content.strip()
+                summary = self._hf_summarize(userprompt, query)  # Use HF
+                if not summary:
+                    summary = f"Summary unavailable for chunk {i}."  # Fallback
                 chunk_summaries.append(summary)
-                # ### UPDATED: Increased delay after successful call (free tier safe)
+                # Delay after successful call
                 time.sleep(self.request_delay + 0.5)
             except Exception as e:
                 print(f"[FullPaperSummarizer] Chunk {i} error: {e}")
-                chunk_summaries.append(f"Summary unavailable for chunk {i}.")  # Fallback
+                chunk_summaries.append(f"Summary unavailable for chunk {i}.")
         
         return chunk_summaries
 
-    # ---- Helpers ----
+    # ---- Helpers (Unchanged: _prepare_meta, _download_and_extract_pdf, _chunk_text) ----
     def _prepare_meta(self, paper: Dict[str, Any]) -> Dict[str, Any]:
         meta = {
             "title": (paper.get("title") or "").strip(),
@@ -371,118 +397,109 @@ class FullPaperSummarizer:
         print(f"[Chunking] Created {len(chunks)} chunks (capped at {self.max_chunks} for rate limits)")   
         return chunks
 
-    # ### UPDATED: Wrapped with decorator and added delay
-    @retry_with_backoff
+    # ### UPDATED: Use HF on aggregated; build simple JSON (no OpenAI)
     def _compose_final_summary_from_chunks(self, meta: Dict[str, Any], chunk_summaries: List[str], timeout: int = 60, query: str = "") -> Optional[Dict[str, Any]]:
         """
-        Compose chunk summaries into final structured JSON, with query relevance.
+        Compose chunk summaries into final structured JSON using HF on aggregated.
         """
         aggregated = "\n\n---\n\n".join(chunk_summaries)  # Join chunks
         
         if not aggregated:
             return None
         
-        # ### NEW: Delay before call
-        time.sleep(self.request_delay)
+        time.sleep(self.request_delay)  # Delay before call
         
         try:
+            # Use HF for overall summary
             user = (
-                f"QUERY CONTEXT: Relate the summary to the search query '{query or 'general research'}'. "
-                f"In problem_statement, approach, results_and_key_findings, and reusability_practical_value, "
-                f"highlight 2-3 specific connections (e.g., 'This improves stock prediction accuracy by X% via ML methods').\n\n"
-                f"PAPER METADATA:\nTitle: {meta.get('title', 'Untitled')}\n"
-                f"Authors: {', '.join(meta.get('authors', []))}\nYear: {meta.get('year', 'N/A')}\n"
-                f"Source: {meta.get('source', 'arXiv/Semantic')}\nURL: {meta.get('url', '')}\n"
+                f"QUERY: Relate to '{query or 'general research'}'.\n"
+                f"PAPER METADATA: Title: {meta.get('title', 'Untitled')}\n"
                 f"Abstract: {meta.get('abstract', '')}\n\n"
-                f"CHUNK SUMMARIES (extract ONLY from these - no external knowledge or invention):\n{aggregated[:4000]}\n\n"  # ### NEW: Truncate aggregated to 4000 chars for TPM
-                "Output ONLY a valid JSON object with these exact keys:\n"
-                "- title: string (from metadata)\n"
-                "- abstract: string (from metadata)\n"
-                "- authors: array of strings\n"
-                "- year: integer or null\n"
-                "- domain: string (e.g., 'AI/ML/Finance' based on content)\n"
-                "- source: string (from metadata)\n"
-                "- url: string (from metadata)\n"
-                "- problem_statement: string or null (specific problem from chunks/metadata)\n"
-                "- motivation: string or null (why important, query-tied)\n"
-                "- approach: string or null (methods from chunks, query-relevant)\n"
-                "- experiments_and_evaluation: string or null (datasets/metrics from chunks)\n"
-                "- results_and_key_findings: array of 3-5 unique strings (bullets with metrics/impacts, query-specific e.g., 'Achieved 92% accuracy for stock forecasting')\n"
-                "- limitations_and_future_work: array of 2-4 unique strings (distinct gaps/futures from chunks, no generics like 'future work needed')\n"
-                "- reusability_practical_value: string or null (1-2 paragraphs on applications/value for query domain, e.g., 'Reusable for real-time trading tools')\n"
-                "Vary phrasing per paper; use real examples/numbers/sentences from chunks/metadata. Set to null/empty array if absent. No extra text."
+                f"CHUNK SUMMARIES: {aggregated[:4000]}\n"  # Keep your truncation
+                "Summarize key approach, results, and value."
             )
+            agg_summary = self._hf_summarize(user, query)  # Use HF
             
-            # Wrapped by decorator above
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": user}],
-                max_tokens=800,
-                temperature=0.2,  # Low for factual
-                timeout=timeout
-            )
-            
-            summary_json_str = response.choices[0].message.content.strip()
-            # Parse and validate JSON (keep your existing validation if present)
-            try:
-                final_summary = json.loads(summary_json_str)
-                if JSONSCHEMA_AVAILABLE:  # If you have schema validation
-                    validate(instance=final_summary, schema=self.summary_schema)  # Assume schema exists
-                # ### NEW: Log response headers for rate limit debugging (free tier)
-                print(f"[Rate Debug] Remaining requests: {response.headers.get('x-ratelimit-remaining-requests', 'N/A')}")
+            if agg_summary:
+                # ### NEW: Build structured JSON from meta + HF output (simple filling)
+                final_summary = {
+                    'title': meta.get('title', 'Untitled'),
+                    'abstract': meta.get('abstract', ''),
+                    'authors': meta.get('authors', []),
+                    'year': meta.get('year'),
+                    'domain': self._infer_domain(meta.get('abstract', ''), query),
+                    'source': meta.get('source', ''),
+                    'url': meta.get('url', ''),
+                    'problem_statement': None,  # HF doesn't extract deeply; use conservative if needed
+                    'motivation': None,
+                    'approach': agg_summary[:150] if agg_summary else None,
+                    'experiments_and_evaluation': None,
+                    'results_and_key_findings': [agg_summary] if agg_summary else ["Key findings from chunks."],
+                    'limitations_and_future_work': ["Inferred from abstract/chunks."],
+                    'reusability_practical_value': f"Practical value for {query or 'research'}: {agg_summary[-100:] if agg_summary else ''}"
+                }
+                # Validate if schema available
+                if JSONSCHEMA_AVAILABLE:
+                    try:
+                        validate(instance=final_summary, schema=self.summary_schema)
+                    except ValidationError as e:
+                        print(f"[HF JSON Validation] {e}")
+                print(f"[HF Debug] Composed summary length: {len(agg_summary)}")
                 return final_summary
-            except (json.JSONDecodeError, ValidationError) as e:
-                print(f"[FullPaperSummarizer] JSON parse/validation error: {e}")
+            else:
+                print("[HF Composition] No summary generated - Falling to conservative")
                 return None
         
         except Exception as e:
-            print(f"[FullPaperSummarizer] Composition error: {e}")
+            print(f"[FullPaperSummarizer] HF Composition error: {e}")
             return None
 
-    # ### UPDATED: Wrapped with decorator and added delay
-    @retry_with_backoff
-    def _call_openai_on_abstract(self, meta: Dict[str, Any], timeout: int = 60, query: str = "") -> Optional[Dict[str, Any]]:
+    # ### UPDATED: Renamed to _summarize_abstract; use HF instead of OpenAI
+    def _summarize_abstract(self, meta: Dict[str, Any], timeout: int = 60, query: str = "") -> Optional[Dict[str, Any]]:
         """
-        Use LLM to summarize abstract only, with query context.
+        Use HF to summarize abstract only, with query context.
         Returns structured JSON or None.
         """
         abstract = meta.get('abstract', '')
-        if not abstract or not self.openai_enabled:
+        if not abstract or not self.hf_enabled:
             return None
         
-        # ### NEW: Delay before call
-        time.sleep(self.request_delay)
+        time.sleep(self.request_delay)  # Delay before call
         
         try:
             user = (
-                f"QUERY: Relate to '{query or 'general research'}' (e.g., emphasize stock prediction relevance).\n\n"
+                f"QUERY: Relate to '{query or 'general research'}'.\n\n"
                 f"PAPER: Title: {meta.get('title')}, Authors: {', '.join(meta.get('authors', []))}, Year: {meta.get('year')}\n"
-                f"Abstract: {abstract[:2000]}\n\n"  # ### NEW: Truncate abstract to 2000 chars for TPM
-                "Summarize in JSON: Use same keys as _compose_final_summary_from_chunks (title/authors/etc., problem_statement, etc.). "
-                "Extract directly from abstract; vary fields with query ties. JSON only."
+                f"Abstract: {abstract[:2000]}\n"  # Keep your truncation
+                "Summarize key ideas in a few sentences."
             )
+            summary_text = self._hf_summarize(user, query)  # Use HF
             
-            # Wrapped by decorator above
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": user}],
-                max_tokens=600,
-                temperature=0.3,
-                timeout=timeout
-            )
-            
-            # ### NEW: Log response headers
-            print(f"[Rate Debug] Remaining requests: {response.headers.get('x-ratelimit-remaining-requests', 'N/A')}")
-            
-            json_str = response.choices[0].message.content.strip()
-            summary = json.loads(json_str)
-            return summary
+            if summary_text:
+                # Build JSON from meta + HF
+                return {
+                    'title': meta.get('title', 'Untitled'),
+                    'abstract': meta.get('abstract', ''),
+                    'authors': meta.get('authors', []),
+                    'year': meta.get('year'),
+                    'domain': self._infer_domain(abstract, query),
+                    'source': meta.get('source', ''),
+                    'url': meta.get('url', ''),
+                    'problem_statement': None,
+                    'motivation': None,
+                    'approach': summary_text[:100],
+                    'experiments_and_evaluation': None,
+                    'results_and_key_findings': [summary_text],
+                    'limitations_and_future_work': ["From abstract."],
+                    'reusability_practical_value': f"Relevance to {query or 'research'}: {summary_text[-50:]}"
+                }
+            return None
         
         except Exception as e:
-            print(f"[FullPaperSummarizer] Abstract LLM error: {e}")
+            print(f"[FullPaperSummarizer] HF Abstract error: {e}")
             return None
 
-    # Validation
+    # Validation (unchanged)
     def _validate_parsed(self, parsed: Dict[str, Any]) -> bool:
         if not isinstance(parsed, dict):
             return False
@@ -505,7 +522,7 @@ class FullPaperSummarizer:
                 return False
         return True
 
-    # Conservative fallback if LLM not available or fails
+    # Conservative fallback if HF not available or fails (unchanged)
     def conservative_summary(self, meta: Dict[str, Any], query: str = "") -> Dict[str, Any]:
         """
         Generate a basic, non-hallucinating summary from metadata/abstract only.
@@ -548,12 +565,12 @@ class FullPaperSummarizer:
             if query else "The methods and results are reusable in related research areas for broader impact."
         )
         
-        summary = {  # ### FIXED: Return 'summary' var
+        summary = {  # Return 'summary' var
             'title': title,
             'abstract': abstract,
             'authors': meta.get('authors', []),
             'year': meta.get('year'),
-            'domain': self._infer_domain(abstract, query),  # Assume you have _infer_domain or use 'AI/ML'
+            'domain': self._infer_domain(abstract, query),
             'source': meta.get('source'),
             'url': meta.get('url'),
             'problem_statement': problem[0] if problem else None,
