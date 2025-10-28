@@ -1,5 +1,5 @@
 """
-🔬 INTELLIGENT Research Assistant - Smart Paper Access & Content Extraction
+¬ INTELLIGENT Research Assistant - Smart Paper Access & Content Extraction
 - Intelligently detects which papers are actually accessible
 - Fetches full text content from accessible papers
 - Provides direct paper links (not just search links)
@@ -21,10 +21,20 @@ import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import json
+from src.summarizer import FullPaperSummarizer
+
 from typing import List, Dict, Optional
 from datetime import datetime
 from collections import Counter
 from urllib.parse import quote, urljoin, urlparse
+from pypdf import PdfReader
+
+try:
+    from pypdf import PdfReader
+    PYPDF_AVAILABLE = True
+except ImportError:
+    PYPDF_AVAILABLE = False
+import io  # For BytesIO
 
 # Suppress all warnings
 warnings.filterwarnings("ignore")
@@ -33,7 +43,7 @@ logging.getLogger().setLevel(logging.ERROR)
 
 st.set_page_config(
     page_title="AI Research Assistant",
-    page_icon="🧠",
+    page_icon=" § ",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -51,7 +61,7 @@ try:
 except ImportError:
     BEAUTIFULSOUP_AVAILABLE = False
 
-# 🎨 BEAUTIFUL DESIGN CSS (PRESERVED)
+#  Ž¨ BEAUTIFUL DESIGN CSS (PRESERVED)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
@@ -348,324 +358,112 @@ class IntelligentPaperAccessor:
         })
     
     def check_and_extract_paper_content(self, paper: Dict) -> Dict:
-        """Intelligently check if paper is accessible and extract content"""
-        
-        # Start with original classification
-        original_pdf_available = paper.get('pdf_available', False)
-        original_full_text = paper.get('full_text', False)
-        
-        # Try multiple access methods
+        paper = paper.copy()
         access_methods = []
-        
-        # Method 1: Direct PDF URL
         pdf_url = paper.get('pdf_url')
         if pdf_url:
             access_methods.append(('direct_pdf', pdf_url))
-        
-        # Method 2: Check if paper URL leads to accessible content
         paper_url = paper.get('url', '')
         if paper_url:
-            access_methods.append(('direct_paper', paper_url))
-        
-        # Method 3: For Semantic Scholar, try alternative access
-        if paper.get('source') == 'Semantic Scholar' and paper.get('semantic_scholar_id'):
-            semantic_id = paper.get('semantic_scholar_id')
+            access_methods.append(('paper_landing', paper_url))  # For indirect links
+        semantic_id = paper.get('semantic_scholar_id')
+        if semantic_id:
             access_methods.append(('semantic_alternative', f"https://www.semanticscholar.org/paper/{semantic_id}"))
-        
-        # Try to access and extract content
+        doi = paper.get('doi', '')
+        if doi:
+            access_methods.append(('doi_pdf', f"https://doi.org/{doi}"))  # DOI resolver
         extracted_content = None
         working_url = None
         access_type = None
-        
         for method_name, url in access_methods:
             try:
-                content = self._try_extract_content(url, method_name)
-                if content and len(content) > 200:  # Significant content found
-                    extracted_content = content
+                content = self.try_extract_content(url, method_name)
+                if content and len(content) > 200:
+                    extracted_content = content[:3000]  # Your length limit
                     working_url = url
                     access_type = method_name
                     break
             except:
                 continue
-        
-        # Update paper with enhanced information
         if extracted_content:
-            paper['extracted_content'] = extracted_content[:3000]  # Limit length
+            paper['extracted_content'] = extracted_content
             paper['working_url'] = working_url
             paper['access_type'] = access_type
             paper['pdf_available'] = True
-            paper['full_text'] = True
-            
-            # Use extracted content for better abstract
-            if len(extracted_content) > len(paper.get('abstract', '')):
-                paper['enhanced_abstract'] = extracted_content[:1000]
-            
         return paper
-    
-    def _try_extract_content(self, url: str, method_name: str) -> Optional[str]:
-        """Try to extract content from a URL"""
+
+    def try_extract_content(self, url: str, method_name: str) -> Optional[str]:
         try:
             response = self.session.get(url, timeout=10, allow_redirects=True)
-            if response.status_code == 200:
-                content_type = response.headers.get('Content-Type', '').lower()
-                
-                # Handle PDF content
-                if 'application/pdf' in content_type:
-                    return "PDF content available for download"
-                
-                # Handle HTML content
-                elif 'text/html' in content_type:
-                    if BEAUTIFULSOUP_AVAILABLE:
-                        soup = BeautifulSoup(response.content, 'html.parser')
-                        
-                        # Remove script and style elements
-                        for script in soup(["script", "style"]):
-                            script.decompose()
-                        
-                        # Try to find main content areas
-                        content_selectors = [
-                            'article', '.paper-content', '.abstract', '.content',
-                            '.paper-abstract', '.paper-body', 'main', '.main-content'
-                        ]
-                        
-                        content = None
-                        for selector in content_selectors:
-                            element = soup.select_one(selector)
-                            if element:
-                                content = element.get_text(strip=True)
-                                if len(content) > 200:
-                                    break
-                        
-                        # Fallback to body content
-                        if not content or len(content) < 200:
-                            body = soup.find('body')
-                            if body:
-                                content = body.get_text(strip=True)
-                        
-                        # Clean up content
-                        if content:
-                            # Remove excessive whitespace
-                            content = re.sub(r'\s+', ' ', content)
-                            # Remove common navigation/footer text
-                            content = re.sub(r'(cookie|privacy|terms|subscribe|download|sign in).*', '', content, flags=re.IGNORECASE)
-                            return content
-                    
-                    else:
-                        # Basic text extraction without BeautifulSoup
-                        text_content = response.text
-                        # Simple HTML tag removal
-                        text_content = re.sub(r'<[^>]+>', '', text_content)
-                        text_content = re.sub(r'\s+', ' ', text_content).strip()
-                        return text_content
-                
-                return response.text[:2000]  # Return first 2000 chars for other content types
-                
-        except Exception as e:
-            return None
-        
-        return None
-    
-# ==================== ENHANCED CONTENT-AWARE SUMMARIZER ====================
-class EnhancedContentAwareSummarizer:
-    """Enhanced summarizer that uses extracted content for better summaries"""
-    
-    def __init__(self):
-        self.research_areas = {
-            'machine learning': 'Machine Learning',
-            'deep learning': 'Deep Learning', 
-            'computer vision': 'Computer Vision',
-            'natural language processing': 'NLP',
-            'artificial intelligence': 'Artificial Intelligence',
-            'data science': 'Data Science',
-            'robotics': 'Robotics',
-            'cybersecurity': 'Cybersecurity',
-            'neural network': 'Neural Networks',
-            'reinforcement learning': 'Reinforcement Learning'
-        }
-    
-    def generate_enhanced_summary(self, paper: Dict, is_full_text: bool = True) -> Dict:
-        title = paper.get('title', 'Research Paper')
-        authors = paper.get('authors', [])
-        year = paper.get('year', datetime.now().year)
-        source = paper.get('source', 'Unknown')
-        url = paper.get('working_url') or paper.get('url', '')
-        
-        # Use extracted content if available, otherwise use abstract
-        content_text = paper.get('extracted_content', '') or paper.get('enhanced_abstract', '') or paper.get('abstract', '')
-        
-        # Check if we have substantial content
-        has_substantial_content = len(content_text) > 500
-        
-        research_area = self._identify_research_area(title, content_text)
-        
-        summary = {
-            'citation': self._generate_citation(title, authors, year, source, url),
-            'problem_statement': self._generate_problem_statement(research_area, title, content_text, has_substantial_content),
-            'objective': self._generate_objective(research_area, title, content_text, has_substantial_content),
-            'methodology': self._generate_methodology(research_area, content_text, has_substantial_content),
-            'key_findings': self._generate_key_findings(research_area, content_text, has_substantial_content),
-            'limitations': self._generate_limitations(research_area, content_text, has_substantial_content),
-            'relevance': self._generate_relevance(research_area, paper.get('citations', 0), has_substantial_content)
-        }
-        
-        return summary
-    
-    def _generate_problem_statement(self, research_area: str, title: str, content: str, has_content: bool) -> str:
-        if has_content and content:
-            # Try to extract problem statement from content
-            problem_indicators = ['problem', 'challenge', 'issue', 'limitation', 'difficulty', 'addresses', 'tackles']
-            sentences = content.split('.')
-            
-            for sentence in sentences[:10]:  # Check first 10 sentences
-                if any(indicator in sentence.lower() for indicator in problem_indicators):
-                    cleaned = sentence.strip()[:200]
-                    if len(cleaned) > 50:
-                        return cleaned
-        
-        # Fallback to template-based generation
-        templates = {
-            'Machine Learning': "Addresses challenges in model accuracy, generalization, and computational efficiency across diverse datasets",
-            'Deep Learning': "Tackles problems of training efficiency, interpretability, and robustness in neural network architectures",
-            'Computer Vision': "Solves limitations in object detection, image recognition accuracy, and real-time processing capabilities",
-            'NLP': "Addresses challenges in natural language understanding, context comprehension, and multilingual processing",
-            'Data Science': "Tackles issues in scalable data analysis, pattern recognition, and handling of heterogeneous data sources"
-        }
-        return templates.get(research_area, f"Addresses fundamental challenges in {research_area.lower()} research and applications")
-    
-    def _generate_objective(self, research_area: str, title: str, content: str, has_content: bool) -> str:
-        if has_content and content:
-            # Try to extract objective from content
-            objective_indicators = ['objective', 'aim', 'goal', 'purpose', 'intend', 'propose', 'develop', 'improve']
-            sentences = content.split('.')
-            
-            for sentence in sentences[:10]:
-                if any(indicator in sentence.lower() for indicator in objective_indicators):
-                    cleaned = sentence.strip()[:200]
-                    if len(cleaned) > 50:
-                        return cleaned
-        
-        # Fallback to template-based generation
-        templates = {
-            'Machine Learning': "To develop improved algorithms that enhance prediction accuracy, reduce computational overhead, and improve generalization",
-            'Deep Learning': "To create more efficient neural architectures with better performance, interpretability, and training stability",
-            'Computer Vision': "To advance image analysis capabilities with higher accuracy, faster processing, and improved robustness"
-        }
-        return templates.get(research_area, f"To advance methodologies and practical applications in {research_area.lower()}")
-    
-    def _generate_methodology(self, research_area: str, content: str, has_content: bool) -> str:
-        if has_content and content:
-            # Try to extract methodology from content
-            method_indicators = ['method', 'approach', 'algorithm', 'technique', 'implementation', 'experiment', 'evaluation']
-            sentences = content.split('.')
-            
-            method_sentences = []
-            for sentence in sentences:
-                if any(indicator in sentence.lower() for indicator in method_indicators) and len(sentence.strip()) > 30:
-                    method_sentences.append(sentence.strip())
-                    if len(method_sentences) >= 2:
-                        break
-            
-            if method_sentences:
-                return ' '.join(method_sentences)[:300]
-        
-        # Fallback to template-based generation
-        if has_content:
-            templates = {
-                'Machine Learning': "Implemented supervised and unsupervised learning algorithms with k-fold cross-validation on benchmark datasets. Performed hyperparameter optimization and compared against state-of-the-art baseline methods.",
-                'Deep Learning': "Designed and trained deep neural networks using advanced optimization techniques. Conducted ablation studies and evaluated performance on multiple datasets with statistical significance testing."
-            }
-        else:
-            return f"Comprehensive {research_area.lower()} methodology with experimental validation (full details require subscription access)"
-        
-        return templates.get(research_area, "Systematic computational approach with empirical validation, statistical analysis, and comprehensive performance evaluation")
-    
-    def _generate_key_findings(self, research_area: str, content: str, has_content: bool) -> List[str]:
-        if has_content and content:
-            # Try to extract findings from content
-            finding_indicators = ['result', 'finding', 'achieve', 'demonstrate', 'show', 'performance', 'improvement', 'accuracy']
-            sentences = content.split('.')
-            
-            findings = []
-            for sentence in sentences:
-                if any(indicator in sentence.lower() for indicator in finding_indicators) and len(sentence.strip()) > 30:
-                    # Look for numerical results
-                    if re.search(r'\d+%|\d+\.\d+%|\d+ times|\d+x|significant|better|improved', sentence.lower()):
-                        findings.append(sentence.strip()[:150])
-                        if len(findings) >= 3:
+            if response.status_code != 200:
+                return None
+            content_type = response.headers.get('Content-Type', '').lower()
+            if 'application/pdf' in content_type:
+                content_len = len(response.content)
+                if content_len < 500 * 1024:  # Small PDF limit
+                    if PYPDF_AVAILABLE:
+                        try:
+                            reader = PdfReader(io.BytesIO(response.content))
+                            text = ''
+                            for page in reader.pages[:5]:
+                                text += (page.extract_text() or '') + '\n'
+                            text = text.strip()[:4000]
+                            if len(text) > 200:
+                                return text
+                        except Exception:
+                            pass
+                    return f"PDF content available ({content_len / 1024:.0f} KB) - Install pypdf for extraction: pip install pypdf"
+                return f"PDF content available for download ({content_len / 1024:.0f} KB)"
+            elif 'text/html' in content_type:
+                if not BEAUTIFULSOUP_AVAILABLE:
+                    return "HTML content (install BeautifulSoup for scraping: pip install beautifulsoup4)"
+                soup = BeautifulSoup(response.content, 'html.parser')
+                for tag in soup(['script', 'style']):
+                    tag.decompose()
+                pdf_links = []
+                cues = ['pdf', 'download', 'full text', 'access pdf', 'view pdf']
+                for a in soup.find_all('a', href=True, limit=20):
+                    href = a['href'].lower()
+                    text = a.get_text(strip=True).lower()
+                    if href.endswith('.pdf') or any(cue in href or cue in text for cue in cues) or 'doi.org' in href:
+                        full_href = urljoin(url, a['href'])
+                        pdf_links.append(full_href)
+                        if len(pdf_links) >= 3:
                             break
-            
-            if findings:
-                return findings
-        
-        if has_content:
-            return [
-                f"Achieved {random.randint(12, 25)}% improvement in prediction accuracy over baseline methods",
-                f"Reduced computational complexity by {random.randint(20, 40)}% while maintaining performance", 
-                f"Demonstrated superior generalization across {random.randint(3, 8)} different benchmark datasets"
-            ]
-        else:
-            return [
-                f"Significant performance improvements documented (full metrics require subscription)",
-                f"Novel algorithmic contributions validated experimentally"
-            ]
-    
-    def _generate_limitations(self, research_area: str, content: str, has_content: bool) -> str:
-        if has_content and content:
-            # Try to extract limitations from content
-            limitation_indicators = ['limitation', 'constraint', 'restrict', 'limited', 'future work', 'drawback', 'weakness']
-            sentences = content.split('.')
-            
-            for sentence in sentences:
-                if any(indicator in sentence.lower() for indicator in limitation_indicators):
-                    cleaned = sentence.strip()[:200]
-                    if len(cleaned) > 50:
-                        return cleaned
-        
-        if has_content:
-            return "Dataset scope limited to specific domains; computational requirements high for real-time deployment; requires further validation on streaming data"
-        else:
-            return "Detailed limitations, scope constraints, and future work directions available in full paper (subscription required)"
-    
-    def _generate_relevance(self, research_area: str, citations: int, has_content: bool) -> str:
-        if citations > 100:
-            impact = "Highly influential and widely cited"
-        elif citations > 50:
-            impact = "Well-recognized and frequently referenced"
-        elif citations > 20:
-            impact = "Moderately cited with growing recognition"
-        else:
-            impact = "Novel research contributing fresh perspectives"
-        
-        content_quality = "with comprehensive analysis" if has_content else "requiring further access for complete evaluation"
-        
-        return f"{impact} work in {research_area.lower()}; provides practical methodologies and theoretical insights {content_quality} valuable for researchers and practitioners"
-    
-    def _generate_citation(self, title: str, authors: List[str], year: int, source: str, url: str) -> str:
-        if len(authors) == 0:
-            author_str = "Unknown Author"
-        elif len(authors) == 1:
-            author_str = authors[0]
-        elif len(authors) <= 3:
-            author_str = ", ".join(authors)
-        else:
-            author_str = f"{authors[0]} et al."
-        
-        citation = f"{author_str} ({year}). {title}. {source}."
-        return citation
-    
-    def _identify_research_area(self, title: str, content: str) -> str:
-        text = (title + ' ' + content).lower()
-        
-        area_scores = {}
-        for keywords, area in self.research_areas.items():
-            score = text.count(keywords)
-            if score > 0:
-                area_scores[area] = score
-        
-        if area_scores:
-            return max(area_scores.items(), key=lambda x: x[1])[0]
-        
-        return "Computational Research"
+                for candidate in pdf_links:
+                    try:
+                        cand_resp = self.session.get(candidate, timeout=8, allow_redirects=True)
+                        if cand_resp.status_code == 200 and 'application/pdf' in cand_resp.headers.get('Content-Type', ''):
+                            content_len = len(cand_resp.content)
+                            if content_len < 500 * 1024:
+                                if PYPDF_AVAILABLE:
+                                    try:
+                                        reader = PdfReader(io.BytesIO(cand_resp.content))
+                                        text = ''
+                                        for page in reader.pages[:5]:
+                                            text += (page.extract_text() or '') + '\n'
+                                        text = text.strip()[:4000]
+                                        if len(text) > 200:
+                                            return text
+                                    except Exception:
+                                        pass
+                                return f"Indirect PDF found ({content_len / 1024:.0f} KB) - Install pypdf for extraction"
+                            return f"Indirect PDF accessed via {method_name} ({content_len / 1024:.0f} KB)"
+                    except:
+                        continue
+                # Fallback HTML extraction
+                main_content = soup.find('main') or soup.find('article') or soup.body
+                if main_content:
+                    text = main_content.get_text(separator=' ', strip=True)[:3000]
+                    if len(text) > 200:
+                        return text
+                return soup.get_text(separator=' ', strip=True)[:2000]
+            return None
+        except requests.exceptions.Timeout:
+            return "Timeout accessing content"
+        except Exception:
+            return None
+
 
 # ==================== REAL ARXIV FETCHER (SAME AS BEFORE) ====================
 class RealArxivFetcher:
@@ -711,7 +509,7 @@ class RealArxivFetcher:
                     'authors': [author.name for author in result.authors],
                     'published_date': result.published.isoformat(),
                     'updated_date': result.updated.isoformat(),
-                    'year': result.published.year,
+                    'year': int(result.published.year) if result.published else int(datetime.now().year),
                     'month': result.published.month,
                     'categories': result.categories,
                     'primary_category': result.primary_category,
@@ -785,20 +583,20 @@ class SemanticScholarFetcher:
                     'x-api-key': self.api_key  # Your API key here - enables 1 req/sec
                 }
                 
-                st.info(f"🔍 **Semantic Scholar (API)**: Searching... (1 req/sec limit)")
+                st.info(f" ” **Semantic Scholar (API)**: Searching... (1 req/sec limit)")
                 
                 response = requests.get(search_url, params=params, headers=headers, timeout=30)
                 
                 # Handle API responses
                 if response.status_code == 429:
                     wait_time = 2 + (attempt * 2)  # Short backoff for rate limit
-                    st.warning(f"⚠️ **Semantic Scholar API**: Rate limited! Waiting {wait_time}s...")
+                    st.warning(f"âš ï¸ **Semantic Scholar API**: Rate limited! Waiting {wait_time}s...")
                     time.sleep(wait_time)
                     continue
                 
                 elif response.status_code != 200:
                     if attempt == self.max_retries - 1:
-                        st.error(f"❌ **Semantic Scholar API**: Failed (Status {response.status_code}). Check API key.")
+                        st.error(f"âŒ **Semantic Scholar API**: Failed (Status {response.status_code}). Check API key.")
                         return []
                     continue
                 
@@ -845,8 +643,8 @@ class SemanticScholarFetcher:
                         'title': paper_data.get('title', ''),
                         'abstract': paper_data.get('abstract', '')[:1000] if paper_data.get('abstract') else '',
                         'authors': authors,
-                        'year': paper_data.get('year', datetime.now().year),
-                        'citations': paper_data.get('citationCount', 0),
+                        'year': int(paper_data.get('year') or datetime.now().year),
+                        'citations': int(paper_data.get('citationCount') or 0),
                         'url': url,
                         'pdf_url': pdf_url,
                         'alternative_urls': alternative_urls,
@@ -862,27 +660,27 @@ class SemanticScholarFetcher:
                     papers.append(paper)
                 
                 # Sort by year (recent first)
-                papers.sort(key=lambda x: x.get('year', 0), reverse=True)
+                papers.sort(key=lambda x: x.get('year') or 0, reverse=True)
                 
                 if papers:
-                    st.success(f"✅ **Semantic Scholar API**: {len(papers)} papers found (full access enabled)")
+                    st.success(f"âœ… **Semantic Scholar API**: {len(papers)} papers found (full access enabled)")
                 else:
-                    st.info("ℹ️ **Semantic Scholar API**: No papers found for this query")
+                    st.info("â„¹ï¸ **Semantic Scholar API**: No papers found for this query")
                 
                 return papers
                 
             except requests.exceptions.Timeout:
-                st.warning(f"⚠️ **Semantic Scholar API**: Timeout on attempt {attempt + 1}")
+                st.warning(f"âš ï¸ **Semantic Scholar API**: Timeout on attempt {attempt + 1}")
                 if attempt < self.max_retries - 1:
                     time.sleep(2 * (attempt + 1))
                 continue
             
             except Exception as e:
-                st.error(f"❌ **Semantic Scholar API**: Error - {str(e)}")
+                st.error(f"âŒ **Semantic Scholar API**: Error - {str(e)}")
                 break
         
         # Fallback if all fails
-        st.warning("⚠️ **Semantic Scholar API**: Search failed. Check internet/API key.")
+        st.warning("âš ï¸ **Semantic Scholar API**: Search failed. Check internet/API key.")
         return []
 
 # ==================== INTELLIGENT MULTI-SOURCE FETCHER ====================
@@ -901,7 +699,7 @@ class IntelligentMultiSourceFetcher:
         all_papers = []
         source_results = {}
         
-        st.write("🔍 **Starting multi-source search...**")
+        st.write(" ” **Starting multi-source search...**")
         
         # Phase 1: Fetch papers from sources
         for source in sources:
@@ -909,7 +707,7 @@ class IntelligentMultiSourceFetcher:
                 if source in self.fetchers:
                     source_display = source.replace('_', ' ').title()
                     
-                    with st.spinner(f"📡 Fetching from {source_display}..."):
+                    with st.spinner(f" “¡ Fetching from {source_display}..."):
                         start_time = time.time()
                         
                         fetcher = self.fetchers[source]
@@ -925,21 +723,21 @@ class IntelligentMultiSourceFetcher:
                         fetch_time = time.time() - start_time
                         
                         if len(papers) > 0:
-                            st.success(f"✅ **{source_display}**: {len(papers)} papers in {fetch_time:.1f}s")
+                            st.success(f"âœ… **{source_display}**: {len(papers)} papers in {fetch_time:.1f}s")
                         else:
-                            st.warning(f"⚠️ **{source_display}**: No papers found")
+                            st.warning(f"âš ï¸ **{source_display}**: No papers found")
                     
                 else:
-                    st.error(f"❌ {source} fetcher not available")
+                    st.error(f"âŒ {source} fetcher not available")
                     source_results[source] = 0
                     
             except Exception as e:
-                st.error(f"❌ **{source.replace('_', ' ').title()}**: {str(e)}")
+                st.error(f"âŒ **{source.replace('_', ' ').title()}**: {str(e)}")
                 source_results[source] = 0
         
         # Phase 2: Intelligent access detection and content extraction
         if all_papers:
-            st.write("🧠 **Phase 2: Content access detection...**")
+            st.write(" §  **Phase 2: Content access detection...**")
             
             processed_papers = []
             accessible_count = 0
@@ -973,11 +771,11 @@ class IntelligentMultiSourceFetcher:
             # Show access detection results
             st.markdown(f"""
             <div class="extraction-status">
-            <strong>🧠 Analysis Complete:</strong><br>
-            📄 Total Papers: {len(processed_papers)}<br>
-            ✅ Accessible Papers: {accessible_count}<br>
-            📜 Content Extracted: {extracted_count}<br>
-            🔒 Restricted Access: {len(processed_papers) - accessible_count}
+            <strong> §  Analysis Complete:</strong><br>
+             “„ Total Papers: {len(processed_papers)}<br>
+            âœ… Accessible Papers: {accessible_count}<br>
+             “œ Content Extracted: {extracted_count}<br>
+             ”’ Restricted Access: {len(processed_papers) - accessible_count}
             </div>
             """, unsafe_allow_html=True)
             
@@ -1002,7 +800,7 @@ class IntelligentMultiSourceFetcher:
             arxiv_count = source_results.get('arxiv', 0)
             st.markdown(f"""
             <div class="source-status">
-            <strong>📚 ArXiv</strong><br>
+            <strong>  ArXiv</strong><br>
             {arxiv_count} papers
             </div>
             """, unsafe_allow_html=True)
@@ -1011,13 +809,13 @@ class IntelligentMultiSourceFetcher:
             semantic_count = source_results.get('semantic_scholar', 0)
             st.markdown(f"""
             <div class="source-status">
-            <strong>🔬 Semantic Scholar</strong><br>
+            <strong> ”¬ Semantic Scholar</strong><br>
             {semantic_count} papers
             </div>
             """, unsafe_allow_html=True)
         
         duplicates_removed = total_before - total_after
-        st.info(f"📊 **Final Summary:** {total_before} papers fetched → {total_after} unique papers (removed {duplicates_removed} duplicates)")
+        st.info(f"  **Final Summary:** {total_before} papers fetched â†’ {total_after} unique papers (removed {duplicates_removed} duplicates)")
     
     def _deduplicate_papers(self, papers: List[Dict]) -> List[Dict]:
         """Remove duplicate papers with enhanced scoring"""
@@ -1072,13 +870,13 @@ class IntelligentMultiSourceFetcher:
             score += 3
         
         # Citation and recency scoring
-        citations = paper.get('citations', 0)
+        citations = int(paper.get('citations') or 0) 
         if citations > 10:
             score += 2
         elif citations > 0:
             score += 1
         
-        year = paper.get('year', 0)
+        year = int(paper.get('year') or datetime.now().year)
         if year >= datetime.now().year - 1:
             score += 2
         elif year >= datetime.now().year - 3:
@@ -1092,31 +890,54 @@ class IntelligentMultiSourceFetcher:
 
 # ==================== CLUSTERING & GAP ANALYSIS (SAME AS BEFORE) ====================
 class ImprovedClusterer:
-    def cluster_papers(self, papers: List[Dict]) -> Dict[int, Dict]:
+    """Simple area-based clusterer for fast research theme grouping"""
+    
+    def __init__(self, query: str = ""):
+        self.query = query or "general research"  # Store query for relevance biasing
+
+    def cluster_papers(self, papers: List[Dict], query: str = "") -> Dict[int, Dict]:
+        effective_query = query or self.query  # Use passed or stored query
+        
         if len(papers) < 2:
-            return {0: {'name': 'All Papers', 'description': 'Complete research collection', 'papers': papers}}
+            return {0: {'name': 'All Papers', 'description': f'Complete research collection relevant to "{effective_query}"', 'papers': papers}}
         
+        def identify_research_area(paper: Dict, query: str) -> str:
+            abstract = paper.get('abstract', '') or paper.get('title', '')
+            text = (abstract + ' ' + query).lower()
+            # Keyword mapping for areas (tied to query; expand as needed)
+            areas = {
+                'machine learning': ['machine learning', 'ml', 'neural', 'deep learning', 'model', 'algorithm'],
+                'stock prediction': ['stock', 'prediction', 'financial', 'market', 'forecast', 'trading'],
+                'ai applications': ['ai', 'artificial intelligence', 'nlp', 'cv', 'robotics'],
+                'other': []  # Default
+                }
+            for area, keywords in areas.items():
+                if any(kw in text for kw in keywords):
+                    return area
+            return 'general research'  # Fallback
+
+        # Group by research areas, biased toward query
         area_groups = {}
-        summarizer = EnhancedContentAwareSummarizer()
-        
         for paper in papers:
-            title = paper.get('title', '')
-            content = paper.get('extracted_content', '') or paper.get('abstract', '')
-            research_area = summarizer._identify_research_area(title, content)
-            
-            if research_area not in area_groups:
-                area_groups[research_area] = []
-            area_groups[research_area].append(paper)
-            paper['cluster'] = len(area_groups) - 1
+            area = identify_research_area(paper, effective_query)  # Use simple function with query
+            if area not in area_groups:
+                area_groups[area] = []
+            area_groups[area].append(paper)
         
+        # Create clusters from groups
         clusters = {}
         for i, (area, papers_list) in enumerate(area_groups.items()):
-            avg_citations = sum(p.get('citations', 0) for p in papers_list) / len(papers_list)
-            avg_year = sum(p.get('year', datetime.now().year) for p in papers_list) / len(papers_list)
+            # Calculate stats
+            avg_citations = sum(int(p.get('citations') or 0) for p in papers_list) / len(papers_list)
+            years = [int(p.get('year') or datetime.now().year) for p in papers_list]
+            avg_year = sum(years) / len(years) if years else datetime.now().year
+            
+            # Query-aware description
+            description = f"Research papers focusing on {area.lower()} methodologies and applications, relevant to '{effective_query}'"
             
             clusters[i] = {
                 'name': area,
-                'description': f"Research papers focusing on {area.lower()} methodologies and applications",
+                'description': description,
                 'paper_count': len(papers_list),
                 'avg_citations': round(avg_citations, 1),
                 'avg_year': round(avg_year),
@@ -1184,49 +1005,49 @@ def render_enhanced_paper_summary(paper: Dict, is_full_text: bool = True):
             authors_str = ', '.join(authors[:3])
             if len(authors) > 3:
                 authors_str += f' et al. ({len(authors)} total)'
-            st.markdown(f"**👥 Authors:** {authors_str}")
+            st.markdown(f"** ‘¥ Authors:** {authors_str}")
         
         source = paper.get('source', 'Unknown')
-        year = paper.get('year', 'N/A')
+        year = paper.get('year', 0)
         citations = paper.get('citations', 0)
-        st.markdown(f"**📊 Source:** {source} | **Year:** {year} | **Citations:** {citations}")
+        st.markdown(f"**  Source:** {source} | **Year:** {year} | **Citations:** {citations}")
         
         # Show content extraction status
         if paper.get('extracted_content'):
-            st.markdown("**🧠 Content:** Extracted and analyzed")
+            st.markdown("** §  Content:** Extracted and analyzed")
         elif paper.get('enhanced_abstract'):
-            st.markdown("**🧠 Content:** Enhanced abstract available")
+            st.markdown("** §  Content:** Enhanced abstract available")
     
     with col2:
         if paper.get('extracted_content'):
-            st.markdown('<span class="status-extracted">🧠 Content Extracted</span>', unsafe_allow_html=True)
+            st.markdown('<span class="status-extracted"> §  Content Extracted</span>', unsafe_allow_html=True)
         elif is_full_text:
-            st.markdown('<span class="status-full">✅ Full Text Available</span>', unsafe_allow_html=True)
+            st.markdown('<span class="status-full">âœ… Full Text Available</span>', unsafe_allow_html=True)
         else:
-            st.markdown('<span class="status-abstract">⚠️ Abstract Only</span>', unsafe_allow_html=True)
+            st.markdown('<span class="status-abstract">âš ï¸ Abstract Only</span>', unsafe_allow_html=True)
     
     # Enhanced AI Summary
     summary = paper.get('ai_summary', {})
     
     if summary:
         st.markdown("---")
-        st.markdown("### 🤖 Research Paper Summary")
+        st.markdown("###  ¤– Research Paper Summary")
         
         sections = [
-            ('📚 1. Citation / Reference', 'citation'),
-            ('❓ 2. Problem Statement (What?)', 'problem_statement'),
-            ('🎯 3. Objective (Why?)', 'objective'), 
-            ('🔬 4. Methodology (How?)', 'methodology'),
-            ('🔍 5. Key Findings / Results', 'key_findings'),
-            ('⚠️ 6. Limitations / Gaps', 'limitations'),
-            ('💡 7. Relevance / Takeaway', 'relevance')
+            ('1. Citation / Reference', 'citation'),
+            ('2. Problem Statement (What?)', 'problem_statement'),
+            ('3. Objective (Why?)', 'objective'), 
+            ('4. Methodology (How?)', 'methodology'),
+            ('5. Key Findings / Results', 'key_findings'),
+            ('6. Limitations / Gaps', 'limitations'),
+            ('7. Relevance / Takeaway', 'relevance')
         ]
         
         for title, key in sections:
             content = summary.get(key)
             if content:
                 if key == 'key_findings' and isinstance(content, list):
-                    findings_html = '<br>'.join([f"• {finding}" for finding in content])
+                    findings_html = '<br>'.join([f"â€¢ {finding}" for finding in content])
                     st.markdown(f"""
                     <div class="summary-section">
                     <strong>{title}</strong><br>
@@ -1249,21 +1070,21 @@ def render_enhanced_paper_summary(paper: Dict, is_full_text: bool = True):
     if working_url:
         access_type = paper.get('access_type', 'direct')
         if access_type == 'direct_pdf':
-            st.markdown(f"[📄 **Access Paper (PDF)**]({working_url})")
+            st.markdown(f"[**Access Paper (PDF)**]({working_url})")
         else:
-            st.markdown(f"[🔗 **Access Full Paper**]({working_url})")
+            st.markdown(f"[**Access Full Paper**]({working_url})")
     
     # Alternative access links
     alternative_urls = paper.get('alternative_urls', [])
     if alternative_urls:
         st.markdown("**Alternative Access:**")
         for i, alt_url in enumerate(alternative_urls[:3]):  # Show up to 3 alternatives
-            st.markdown(f"[🔗 Alternative {i+1}]({alt_url})")
+            st.markdown(f"[Alternative {i+1}]({alt_url})")
     
     # Direct PDF link if different from main URL
     pdf_url = paper.get('pdf_url')  
     if pdf_url and pdf_url != working_url:
-        st.markdown(f"[📄 **Direct PDF Download**]({pdf_url})")
+        st.markdown(f"[**Direct PDF Download**]({pdf_url})")
 
 def render_suggested_paper(paper: Dict):
     """Render truly restricted paper card"""
@@ -1275,11 +1096,11 @@ def render_suggested_paper(paper: Dict):
             <strong>Authors:</strong> {', '.join(paper.get('authors', ['Unknown'])[:3])}
             {' et al.' if len(paper.get('authors', [])) > 3 else ''}<br>
             <strong>Source:</strong> {paper.get('source', 'Unknown')} | 
-            <strong>Year:</strong> {paper.get('year', 'N/A')} | 
+            <strong>Year:</strong> {paper.get('year', 0)} | 
             <strong>Citations:</strong> {paper.get('citations', 0)}
         </p>
         <a href="{paper.get('url', '#')}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 500;">
-            🔐 Requires Subscription Access
+             ”Requires Subscription Access
         </a>
     </div>
     """, unsafe_allow_html=True)
@@ -1289,14 +1110,14 @@ def render_suggested_paper(paper: Dict):
 # Beautiful Header
 st.markdown("""
 <div class="main-header">
-    <h1>🧠 AI Research Assistant</h1>
+    <h1>AI Research Assistant</h1>
     <p>Extract, Analyze, and Summarize Research Papers</p>
 </div>
 """, unsafe_allow_html=True)
 
 # Enhanced Sidebar
 with st.sidebar:
-    st.markdown("### 🔍 Search")
+    st.markdown("### Search")
     
     query = st.text_input(
         "Enter Research Topic",
@@ -1304,16 +1125,21 @@ with st.sidebar:
         help="Enter research topics for analysis"
     )
     
-    st.markdown("### 📚 Sources")
+    st.markdown("### Sources")
     
     use_arxiv = st.checkbox("arXiv", value=True)
     if use_arxiv and not ARXIV_AVAILABLE:
-        st.error("❌ ArXiv library missing! Install: `pip install arxiv`")
+        st.error("ArXiv library missing! Install: `pip install arxiv`")
     
     use_semantic = st.checkbox("Semantic Scholar", value=True) 
     
-    st.markdown("### 📊 Number of Papers")
-    papers_per_source = st.slider("", 10, 100, 30, help="Papers to fetch per source")
+    st.markdown("### Number of Papers")
+    papers_per_source = st.slider(
+        "Number of papers per source",
+        10, 100, 30,
+        help="Select how many papers to fetch per source",
+        label_visibility="collapsed"
+    )
     
     # Build source list
     sources = []
@@ -1322,86 +1148,130 @@ with st.sidebar:
     
     if sources:
         expected_total = papers_per_source * len(sources)
-        st.success(f"🧠 Will analyze ~{expected_total} papers")
+        st.success(f"Will analyze ~{expected_total} papers")
         source_names = []
         if use_arxiv: 
-            source_names.append("ArXiv" + (" ✅" if ARXIV_AVAILABLE else " ❌"))
-        if use_semantic: source_names.append("Semantic Scholar ✅")
+            source_names.append("ArXiv" + ("" if ARXIV_AVAILABLE else ""))
+        if use_semantic: source_names.append("Semantic Scholar")
         
-        st.markdown(f"🎯 **Sources:** {', '.join(source_names)}")
+        st.markdown(f"**Sources:** {', '.join(source_names)}")
     else:
         st.error("Please select at least one source!")
     
     # Show content extraction capabilities
     if not BEAUTIFULSOUP_AVAILABLE:
-        st.warning("⚠️ **Install BeautifulSoup for enhanced extraction:** `pip install beautifulsoup4`")
+        st.warning("**Install BeautifulSoup for enhanced extraction:** `pip install beautifulsoup4`")
     
     # Start Analysis Button
-    if st.button("🚀 Start Analysis", type="primary", disabled=st.session_state.processing or not sources or not query):
+    if st.button("Start Analysis", type="primary", disabled=st.session_state.processing or not sources or not query):
         if query.strip() and sources:
             st.session_state.processing = True
+        
+        try:
+            start_time = time.time()
+            fetcher = IntelligentMultiSourceFetcher()
+            papers = fetcher.fetch_papers(query, sources, papers_per_source)
+            fetch_time = time.time() - start_time
             
-            try:
-                start_time = time.time()
-                fetcher = IntelligentMultiSourceFetcher()
-                papers = fetcher.fetch_papers(query, sources, papers_per_source)
-                fetch_time = time.time() - start_time
+            if len(papers) == 0:
+                st.error("No papers found! Try different keywords or sources.")
+                st.session_state.processing = False
+                st.stop()
+            
+            original_papers = papers
+            # Enhanced relevance filter after fetching (stricter scoring)
+            def score_paper_relevance(paper: Dict, query: str) -> float:
+                if not query:
+                    return 1.0
+                query_lower = query.lower()
+                query_words = [w for w in query_lower.split() if len(w) > 2]  # Ignore short words like "in", "the"
+                if not query_words:
+                    return 1.0
                 
-                if len(papers) == 0:
-                    st.error("❌ No papers found! Try different keywords or sources.")
-                    st.session_state.processing = False
-                    st.stop()
+                title_lower = paper.get('title', '').lower()
+                abstract_lower = paper.get('abstract', '').lower()
+                content_lower = (paper.get('extracted_content') or '').lower()[:2000]  # Limit content for speed
                 
-                st.success(f"✅ **Total: {len(papers)} unique papers** analyzed in {fetch_time:.1f}s")
-                
-                with st.spinner("🧠 Generating enhanced AI summaries..."):
-                    start_time = time.time()
-                    summarizer = EnhancedContentAwareSummarizer()
-                    full_text_papers = []
-                    suggested_papers = []
-                    
-                    for paper in papers:
-                        # Enhanced classification based on actual content availability
-                        has_extracted_content = bool(paper.get('extracted_content'))
-                        has_working_url = bool(paper.get('working_url'))
-                        has_pdf = paper.get('pdf_available', False)
-                        
-                        is_truly_accessible = has_extracted_content or has_working_url or has_pdf
-                        
-                        summary = summarizer.generate_enhanced_summary(paper, is_truly_accessible)
-                        paper['ai_summary'] = summary
-                        
-                        # Better classification
-                        if is_truly_accessible:
-                            full_text_papers.append(paper)
+                text_lower = title_lower + ' ' + abstract_lower + ' ' + content_lower
+                matches = sum(1 for word in query_words if word in text_lower)
+                score = matches / len(query_words) if query_words else 0
+                # Bonus for title matches (more relevant)
+                title_matches = sum(1 for word in query_words if word in title_lower)
+                score += (title_matches / len(query_words)) * 0.5  # Weight title 50%
+                return score
+            
+            # Apply strict filter: Keep only papers with score >= 0.5 (50%+ relevance)
+            original_count = len(papers)
+            high_relevance_papers = [p for p in papers if score_paper_relevance(p, query) >= 0.5]
+            low_relevance_count = original_count - len(high_relevance_papers)
+
+            if low_relevance_count > 0:
+                st.info(f"Filtered {low_relevance_count} marginally related papers to focus on high-relevance results.")
+
+            papers = high_relevance_papers
+            if len(papers) == 0:
+                st.warning("No highly relevant papers found. Showing all fetched results.")
+                papers = original_papers  # Fallback to all if empty (add original_papers = papers before filter if needed)
+            
+            st.success(f"**Total: {len(papers)} highly relevant papers** analyzed in {fetch_time:.1f}s (filtered from {original_count})")
+            
+            # ... (rest of the try-block continues: summaries spinner, clustering, etc.)
+
+           
+            with st.spinner("Generating enhanced AI summaries..."):
+                starttime = time.time()
+                summarizer = FullPaperSummarizer(model="gpt-4o-mini")  # Use your OpenAI model; set OPENAI_API_KEY env var
+                fulltextpapers = []
+                suggestedpapers = []
+                for paper in papers:
+                    isfulltext = bool(paper.get('pdf_available') or paper.get('full_text') or paper.get('extracted_content'))
+                    # Generate AI summary using LLM with query and full-text check
+                    ai_summary = summarizer.summarize_paper(
+                        paper, 
+                        use_full_text=isfulltext, 
+                        timeout=120, 
+                        query=query  # Pass query for relevance
+                    )
+                    if ai_summary and isinstance(ai_summary, dict):
+                        paper['ai_summary'] = ai_summary
+                        if isfulltext:
+                            fulltextpapers.append(paper)
                         else:
-                            suggested_papers.append(paper)
-                           
-                    summary_time = time.time() - start_time
-                    st.success(f"✅ Generated {len(papers)} enhanced summaries in {summary_time:.1f}s")
-                    
-                with st.spinner("📊 Analyzing research themes..."):
-                    start_time = time.time()
-                    clusterer = ImprovedClusterer()
-                    clusters = clusterer.cluster_papers(papers)
-                    cluster_time = time.time() - start_time
-                    st.success(f"✅ Identified {len(clusters)} research themes in {cluster_time:.1f}s")
+                            suggestedpapers.append(paper)
+                    else:
+                        # Fallback to conservative summary if LLM fails/unavailable
+                        meta = summarizer._prepare_meta(paper)  # Private but accessible; prepare metadata
+                        conservative = summarizer.conservative_summary(meta, query=query)
+                        paper['ai_summary'] = conservative
+                        if isfulltext:
+                            fulltextpapers.append(paper)
+                        else:
+                            suggestedpapers.append(paper)
+                summarytime = time.time() - starttime
+                st.success(f"Generated {len(papers)} enhanced summaries in {summarytime:.1f}s")
+
+            with st.spinner("Analyzing research themes..."):
+                start_time = time.time()
+                clusterer = ImprovedClusterer(query=query)  # Pass query for relevance
+                clusters = clusterer.cluster_papers(papers, query=query)
+                cluster_time = time.time() - start_time
+                st.success(f"Identified {len(clusters)} research themes in {cluster_time:.1f}s")
+            
+            # Store results
+            st.session_state.papers_data = papers
+            st.session_state.full_text_papers = fulltextpapers
+            st.session_state.suggested_papers = suggestedpapers
+            st.session_state.clusters = clusters
+            st.session_state.processing = False
                 
-                # Store results
-                st.session_state.papers_data = papers
-                st.session_state.full_text_papers = full_text_papers
-                st.session_state.suggested_papers = suggested_papers
-                st.session_state.clusters = clusters
-                st.session_state.processing = False
+            st.balloons()
                 
-                st.balloons()
-                
-            except Exception as e:
-                st.error(f"Error during analysis: {str(e)}")
-                st.session_state.processing = False
+        except Exception as e:
+            st.error(f"Error during analysis: {str(e)}")
+            st.session_state.processing = False
 
     # Clear Results Button
-    if st.button("🗑️ Clear Results", type="secondary"):
+    if st.button("Clear Results", type="secondary"):
         st.session_state.papers_data = []
         st.session_state.full_text_papers = []
         st.session_state.suggested_papers = []
@@ -1455,14 +1325,14 @@ if st.session_state.papers_data:
     
     # Clean tabs
     tab1, tab2, tab3, tab4 = st.tabs([
-        "📊 Dashboard", 
-        "📄 Papers & Summaries", 
-        "🔍 Research Gaps",
-        "📚 Restricted Reading"
+        " Dashboard", 
+        " Papers & Summaries", 
+        " Research Gaps",
+        " Restricted Reading"
     ])
     
     with tab1:
-        st.markdown("### 📊 Research Dashboard")
+        st.markdown("### Research Dashboard")
         st.markdown("*Intelligent analysis with enhanced content extraction*")
         
         if st.session_state.clusters:
@@ -1517,10 +1387,13 @@ if st.session_state.papers_data:
                 st.plotly_chart(fig, use_container_width=True)
             
             # Enhanced cluster cards
-            st.markdown("### 🎯 Research Themes")
+            st.markdown("### Research Themes")
             
             for cluster_id, cluster_info in st.session_state.clusters.items():
-                extracted_in_cluster = len([p for p in cluster_info['papers'] if p.get('extracted_content')])
+                # Filter papers to those relevant to query (simple keyword match for safety)
+                relevant_papers = [p for p in cluster_info['papers'] if any(word in (p.get('title', '') + p.get('abstract', '')).lower() for word in query.lower().split())]
+                extracted_in_cluster = len([p for p in relevant_papers if p.get('extracted_content')])  # Update count
+                cluster_info['papers'] = relevant_papers  # Override for display
                 
                 st.markdown(f"""
                 <div class="cluster-card">
@@ -1528,16 +1401,16 @@ if st.session_state.papers_data:
                     <p style="color: #64748b; margin-bottom: 1rem;">{cluster_info['description']}</p>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <span style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; color: #475569;">
-                            📄 {cluster_info['paper_count']} papers
+                             “{cluster_info['paper_count']} papers
                         </span>
                         <span style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; color: #475569;">
-                            🧠 {extracted_in_cluster} content extracted
+                             {extracted_in_cluster} content extracted
                         </span>
                         <span style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; color: #475569;">
-                            📊 {cluster_info.get('avg_citations', 0)} avg citations
+                              {cluster_info.get('avg_citations', 0)} avg citations
                         </span>
                         <span style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; color: #475569;">
-                            📅 ~{cluster_info.get('avg_year', 2024)}
+                             “… ~{cluster_info.get('avg_year', 2024)}
                         </span>
                     </div>
                 </div>
@@ -1546,7 +1419,7 @@ if st.session_state.papers_data:
             st.info("Complete analysis to see research themes and dashboard metrics.")
     
     with tab2:
-        st.markdown("### 📄 Papers & Summaries")
+        st.markdown("### Papers & Summaries")
         st.markdown("*Enhanced summaries from accessible and extracted content (newest first)*")
         
         if not st.session_state.full_text_papers:
@@ -1573,15 +1446,15 @@ if st.session_state.papers_data:
             for i, paper in enumerate(papers_to_show, 1):
                 content_indicator = ""
                 if paper.get('extracted_content'):
-                    content_indicator = " 🧠"
+                    content_indicator = "  § "
                 elif paper.get('working_url'):
-                    content_indicator = " ✅"
+                    content_indicator = " âœ…"
                 
-                with st.expander(f"{i + (page * papers_per_page if 'page' in locals() else 0)}. {paper.get('title', 'Unknown Title')}{content_indicator} ({paper.get('year', 'N/A')})"):
+                with st.expander(f"{i + (page * papers_per_page if 'page' in locals() else 0)}. {paper.get('title', 'Unknown Title')}{content_indicator} ({paper.get('year', 0)})"):
                     render_enhanced_paper_summary(paper, is_full_text=True)
     
     with tab3:
-        st.markdown("### 🔍 Research Gaps Analysis")
+        st.markdown("### Research Gaps Analysis")
         st.markdown("*Enhanced gap analysis using extracted content*")
         
         if st.session_state.papers_data:
@@ -1606,17 +1479,17 @@ if st.session_state.papers_data:
             st.info("Complete paper analysis to identify research gaps and opportunities.")
     
     with tab4:
-        st.markdown("### 📚 Restricted Reading")
+        st.markdown("### Restricted Reading")
         st.markdown("*Papers requiring institutional or subscription access*")
         
         st.markdown("""
         <div class="warning-box">
-        🔐 <strong>Restricted Access:</strong> Access to these papers requires a subscription or paid access.
+         ”<strong>Restricted Access:</strong> Access to these papers requires a subscription or paid access.
         </div>
         """, unsafe_allow_html=True)
         
         if not st.session_state.suggested_papers:
-            st.success("🎉 Excellent! All papers are accessible. Check 'Papers & Summaries' for complete analysis with extracted content.")
+            st.success("Excellent! All papers are accessible. Check 'Papers & Summaries' for complete analysis with extracted content.")
         else:
             st.markdown(f"**{len(st.session_state.suggested_papers)} papers requiring paid/institutional access**")
             
@@ -1625,7 +1498,7 @@ if st.session_state.papers_data:
 
 else:
     # Enhanced welcome screen
-    st.markdown("### 🧠 Intelligent Research Analysis")
+    st.markdown("### Intelligent Research Analysis")
     
     steps = [
         {
@@ -1636,7 +1509,7 @@ else:
         {
             'title': 'Select Enhanced Sources', 
             'description': 'Choose from real APIs with intelligent access detection capabilities',
-            'expected': f'ArXiv: {"✅" if ARXIV_AVAILABLE else "❌"}, Semantic Scholar: ✅'
+            'expected': f'ArXiv: {"" if ARXIV_AVAILABLE else ""}, Semantic Scholar:'
         },
         {
             'title': 'Set Paper Count',
@@ -1667,19 +1540,19 @@ else:
         """, unsafe_allow_html=True)
     
     # Enhanced capabilities
-    st.markdown("### ✨ Enhanced Capabilities")
+    st.markdown("### Enhanced Capabilities")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        **🧠 Intelligent Content Extraction**
+        ** Intelligent Content Extraction**
         - Detects accessible papers automatically
         - Extracts full text content when available  
         - Enhanced summaries from extracted content
         - Direct repository link generation
         
-        **📊 Smart Classification**
+        **  Smart Classification**
         - Only truly restricted papers in "Suggested Reading"
         - Accessible papers get full analysis
         - Content extraction status indicators
@@ -1688,13 +1561,13 @@ else:
     
     with col2:
         st.markdown("""
-        **🔍 Advanced Access Detection**
+        ** Advanced Access Detection**
         - Multiple repository URL generation
         - Working link identification
         - Alternative access point discovery
         - PDF availability verification
         
-        **📈 Enhanced Analysis**
+        ** Enhanced Analysis**
         - Content-aware gap analysis
         - Extracted content-based clustering
         - Smart paper scoring and deduplication
@@ -1702,29 +1575,29 @@ else:
         """)
     
     # Dependencies and capabilities
-    st.markdown("### 🛠️ System Status")
+    st.markdown("### System Status")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
         if ARXIV_AVAILABLE:
-            st.success("✅ **ArXiv API** - Real papers available")
+            st.success(" **ArXiv API** - Real papers available")
         else:
-            st.error("❌ **ArXiv** - Install: `pip install arxiv`")
+            st.error("**ArXiv** - Install: `pip install arxiv`")
     
     with col2:
-        st.success("✅ **Semantic Scholar** - Enhanced API ready")
+        st.success("**Semantic Scholar** - Enhanced API ready")
     
     with col3:
         if BEAUTIFULSOUP_AVAILABLE:
-            st.success("✅ **Content Extraction** - Advanced parsing")
+            st.success("**Content Extraction** - Advanced parsing")
         else:
-            st.warning("⚠️ **Install BeautifulSoup** - `pip install beautifulsoup4`")
+            st.warning("**Install BeautifulSoup** - `pip install beautifulsoup4`")
     
-    st.markdown("### 🎯 Example Results")
-    st.markdown("**Query:** `deep learning transformers` → **Expected:** 60-300 papers → **Intelligent Analysis:** Content extraction, access detection, enhanced summaries → **Time:** 30-90 seconds")
+    st.markdown("### Example Results")
+    st.markdown("**Query:** `deep learning transformers` â†’ **Expected:** 60-300 papers â†’ **Intelligent Analysis:** Content extraction, access detection, enhanced summaries â†’ **Time:** 30-90 seconds")
 
 # Clean footer
 if not st.session_state.processing:
     st.markdown("---")
-    st.markdown("<div style='text-align: center; color: #94a3b8; font-size: 0.9rem;'>🧠 Intelligent research assistant with content extraction</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; color: #94a3b8; font-size: 0.9rem;'> §  Intelligent research assistant with content extraction</div>", unsafe_allow_html=True)
