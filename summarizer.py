@@ -192,13 +192,8 @@ class FullPaperSummarizer:
                 return abstract_summary
         
 
-        # Final fallback: Conservative (no LLM)
-        conservative = self.conservative_summary(meta, query=query)
-        print(f"[DEBUG Summarize] Conservative fallback used, keys: {list(conservative.keys()) if conservative else None}")
-        if conservative:
-            for k, v in conservative.items():
-                print(f"[DEBUG Summarize] {k}: {repr(v)[:200]}")
-        return conservative
+        # Final fallback: Just return a single summary line rather than structured fallback
+        return {"summary": "Summary couldn't be extracted"}
 
     def _chunk_and_summarize(self, text: str, meta: Dict[str, Any], timeout: int = 60, query: str = "") -> List[str]:
         """
