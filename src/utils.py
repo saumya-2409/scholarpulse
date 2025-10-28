@@ -3,9 +3,26 @@ Utility functions for paper processing
 """
 
 import hashlib
+import requests
 import re
 from typing import List, Dict, Set
 from collections import Counter
+
+# utils.py additions (append to file)
+
+def is_paywalled_response(response: requests.Response) -> bool:
+    """
+    Heuristic: True if response indicates paywall or HTML content instead of PDF.
+    """
+    if response.status_code in (401, 403):
+        return True
+    ctype = response.headers.get("Content-Type", "").lower()
+    if "html" in ctype:
+        return True
+    if "pdf" not in ctype and not response.content.startswith(b"%PDF"):
+        return True
+    return False
+
 
 def deduplicate_papers(papers: List[Dict]) -> List[Dict]:
     """
