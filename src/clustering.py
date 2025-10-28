@@ -150,7 +150,7 @@ class PaperClusterer:
         
         # Find common themes and keywords
         cluster_name = self._generate_cluster_name(titles, all_text)
-        cluster_description = self._generate_cluster_description(papers, all_text)
+        cluster_description = self._generate_cluster_description(papers, all_text, self.query if hasattr(self, 'query') else "")
         
         # Calculate cluster statistics
         avg_year = np.mean(years) if years else None
@@ -161,7 +161,7 @@ class PaperClusterer:
             'name': cluster_name,
             'description': cluster_description,
             'paper_count': len(papers),
-            'avg_year': int(avg_year) if avg_year else None,
+            'avg_year': int(avg_year) if avg_year else 0,
             'avg_citations': round(avg_citations, 1),
             'top_venues': self._get_top_venues(venues),
             'papers': papers
@@ -206,29 +206,28 @@ class PaperClusterer:
         
         return "Research Cluster"
     
-    def _generate_cluster_description(self, papers: List[Dict], all_text: List[str]) -> str:
-        """Generate a description for the cluster"""
-        
+    def generate_cluster_description(self, papers: List[Dict], all_text: List[str], query: str = "") -> str:
         paper_count = len(papers)
-        
-        # Get time range
+        # Get time range...
         years = [p.get('year') for p in papers if p.get('year')]
         if years:
-            year_range = f"{min(years)}-{max(years)}" if min(years) != max(years) else str(min(years))
+            min_year = min(years)
+            max_year = max(years)
+            year_range = f"{min_year}-{max_year}" if min_year != max_year else str(min_year)
         else:
             year_range = "recent"
-        
-        # Get common research focus
-        combined_text = ' '.join(all_text[:3])  # Use first 3 texts to avoid too much content
+        # Get common research focus, biased toward query...
+        combined_text = ' '.join(all_text[:3])  # Use first 3 texts
         focus_keywords = self._extract_common_words(combined_text.lower())
-        
-        if focus_keywords:
-            focus = f"focusing on {', '.join(focus_keywords[:3])}"
+        if query:
+            # Incorporate query keywords for relevance
+            query_words = re.findall(r'\w+', query.lower())
+            focus_keywords = [kw for kw in focus_keywords if any(qw in kw for qw in query_words)] or focus_keywords
+            focus = f"relevant to '{query}' by {' '.join(focus_keywords[:3])}"
         else:
-            focus = "covering various research aspects"
-        
+            focus = f"focusing on {' '.join(focus_keywords[:3])}" if focus_keywords else "covering various research aspects"
         return f"Collection of {paper_count} papers from {year_range}, {focus}"
-    
+
     def _extract_common_words(self, text: str, min_length: int = 4) -> List[str]:
         """Extract common meaningful words from text"""
         
