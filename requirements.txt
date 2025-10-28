@@ -17,3 +17,7 @@ python-dateutil>=2.8.0
 
 # For real arXiv integration
 arxiv>=1.4.0
+
+PyMuPDF          # pip install pymupdf
+requests
+tqdm
