@@ -45,9 +45,7 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
-OPENAI_API_KEY = "OPENAI_API_KEY_REMOVED"
-if OPENAI_AVAILABLE and OPENAI_API_KEY:
-    openai.api_key = OPENAI_API_KEY
+OPENAI_API_KEY = None
 
 DEFAULT_MODEL = "gpt-4o-mini"  # change if you have other model access
 CHUNK_CHAR_SIZE = 3000  # characters per chunk for LLM summarization (tune as needed)
@@ -105,9 +103,10 @@ class FullPaperSummarizer:
         # Prioritize: Passed key > Streamlit secrets (Cloud) > Env var (local) > None
         api_key = (api_key or 
                    st.secrets.get("OPENAI_API_KEY") or   # Cloud secrets (secure)
-                   os.getenv("OPENAI_API_KEY"))           # Local env var
+                   os.getenv("OPENAI_API_KEY")) or           # Local env var
+                   OPENAI_API_KEY)
         
-        if api_key:  # No longer default hardcoded
+        if api_key and OPENAI_AVAILABLE:  # No longer default hardcoded
             try:
                 self.client = openai.OpenAI(api_key=api_key)
                 # Validate key non-blockingly
