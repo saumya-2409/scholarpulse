@@ -173,29 +173,33 @@ class FullPaperSummarizer:
                 extracted_text = None
         
         if extracted_text:
-            # Chunk and summarize full text with OpenAI, passing query
             chunk_summaries = self._chunk_and_summarize(extracted_text, meta, timeout=timeout // 2, query=query)
             if chunk_summaries:
                 final_summary = self._compose_final_summary_from_chunks(meta, chunk_summaries, timeout // 2, query=query)
+                # DEBUG
+                print(f"[DEBUG Summarize] Used PDF, OpenAI enabled: {self.openai_enabled}; final_summary keys: {list(final_summary.keys()) if final_summary else None}")
                 if final_summary:
-                    return final_summary
+                    for k, v in final_summary.items():
+                        print(f"[DEBUG Summarize] {k}: {repr(v)[:200]}")
+                return final_summary
         
         # No full text: Use OpenAI on abstract (your preference)
         if self.openai_enabled:
             abstract_summary = self._call_openai_on_abstract(meta, timeout=timeout // 2, query=query)
+            print(f"[DEBUG Summarize] Used abstract LLM, OpenAI enabled: {self.openai_enabled}; abstract_summary keys: {list(abstract_summary.keys()) if abstract_summary else None}")
             if abstract_summary:
+                for k, v in abstract_summary.items():
+                    print(f"[DEBUG Summarize] {k}: {repr(v)[:200]}")
                 return abstract_summary
         
-        # Debug: Log summary structure
-        print(f"[DEBUG Summarize] OpenAI enabled: {self.openai_enabled}, PDF text len: {len(extracted_text) if 'full_text' in locals() else 0}")
-        print(f"[DEBUG Summarize] Raw summary keys: {list(abstract_summary.keys()) if abstract_summary else 'None'}")
-        if abstract_summary:
-            for key, val in abstract_summary.items():
-                print(f"[DEBUG Summarize] {key}: {val[:100] if isinstance(val, str) else len(val) if isinstance(val, list) else 'None'}...")
-        return abstract_summary
 
         # Final fallback: Conservative (no LLM)
-        return self.conservative_summary(meta, query=query)
+        conservative = self.conservative_summary(meta, query=query)
+        print(f"[DEBUG Summarize] Conservative fallback used, keys: {list(conservative.keys()) if conservative else None}")
+        if conservative:
+            for k, v in conservative.items():
+                print(f"[DEBUG Summarize] {k}: {repr(v)[:200]}")
+        return conservative
 
     def _chunk_and_summarize(self, text: str, meta: Dict[str, Any], timeout: int = 60, query: str = "") -> List[str]:
         """
@@ -510,6 +514,3 @@ class FullPaperSummarizer:
         print(f"[DEBUG Conservative] Generated keys: {list(summary.keys())}")
         return summary
      
-     
-     
-    
