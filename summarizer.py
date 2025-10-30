@@ -94,7 +94,7 @@ SUMMARY_SCHEMA = {
 }
 
 class FullPaperSummarizer:
-    def __init__(self, model: str = "gemini-1.5-flash", chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):
+    def __init__(self, model: str = "gemini-2.5-pro", chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):
         self.model = model
         self.chunk_size = chunk_size
         self.max_chunks = max_chunks
