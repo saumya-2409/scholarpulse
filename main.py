@@ -1357,7 +1357,7 @@ if st.session_state.papers_data:
                     font_size=12,
                     showlegend=True
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='100%')
             
             with col2:
                 citation_data = []
@@ -1381,7 +1381,7 @@ if st.session_state.papers_data:
                     xaxis_title="Average Citations",
                     yaxis_title="Research Area"
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='100%')
             
             # Enhanced cluster cards
             st.markdown("### Research Themes")
