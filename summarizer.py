@@ -83,10 +83,11 @@ class FullPaperSummarizer:
             return
         self.initialized = True
         self.chunk_size = chunk_size
-        self.max_chunks = max_chunks
         self.overlap = overlap
+        self.max_chunks = min(max_chunks, 3)
+        self.request_delay = 5  # Slower for quota
+
         self.current_model = None  # FIXED: None until success
-        self.request_delay = 2  # Slower for quota
 
         self.summary_schema = SUMMARY_SCHEMA
         self.pdf_enabled = PYPDF2_AVAILABLE
@@ -191,10 +192,17 @@ class FullPaperSummarizer:
                 prompt,
                 generation_config={"temperature": 0.3, "max_output_tokens": 800}
             )
-            if response.text and response.text.strip():
+            # FIX: Check if candidates exist and are not blocked before accessing response.text
+            if not response.candidates:
+                # The response object is likely a wrapper for an empty/blocked result
+                raise Exception("Response candidates list is empty (API or Safety Block)")
+            # Use response.text which is now safer
+            text = response.text
+
+            if text and text.strip():
                 print("[Debug] Call success")
-                return response.text.strip()
-            raise Exception("Empty response")
+                return text.strip()
+            raise Exception("Response text is empty or None")
         except Exception as e:
             error = str(e)[:100].lower()
             print(f"[API Failed] {error}")
@@ -202,6 +210,8 @@ class FullPaperSummarizer:
                 print("[API Failed] Model unavailable - Regenerate key")
             elif "429" in error or "quota" in error:
                 print("[API Failed] Rate limit - Wait/reduce papers")
+            elif "invalid operation" in error or "safety block" in error:
+                print("[API Failed] Response text failed (blocked/malformed)")
             return ""
 
     def _chunk_and_summarize(self, chunks: List[str], meta: Dict[str, Any], query: str = "") -> List[str]:
