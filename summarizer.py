@@ -45,7 +45,7 @@ try:
 except ImportError:
     GEMINI_AVAILABLE = False
 
-DEFAULT_MODEL = "gemini-1.5-flash"  # Free model
+DEFAULT_MODEL = "gemini-2.5-pro"  # Free model
 CHUNK_CHAR_SIZE = 3000
 CHUNK_OVERLAP = 200
 
