@@ -6,11 +6,12 @@ Full-paper summarizer using Google Gemini API (free tier):
 - extracts text (PyPDF2),
 - chunks text, summarizes each chunk via Gemini,
 - composes a final structured summary (JSON) using Gemini,
-- falls back to "Summary couldn't be generated" if API unavailable (no conservative).
+- On API failure: Logs error visibly (no retries to save calls) and returns explicit message.
 
 Important:
 - Requires `google-generativeai` package + GEMINI_API_KEY in secrets.
-- Free tier: 15 RPM, 1M tokens/day, 1500 RPD (plenty for research).
+- Starts with 'gemini-1.5-pro' (your test model), falls back to stable ones.
+- Debugging: All logs prefixed for Streamlit Logs visibility.
 """
 
 import os
@@ -28,50 +29,35 @@ import streamlit as st
 try:
     import PyPDF2
     PYPDF2_AVAILABLE = True
+    print("[Debug] PyPDF2 available for PDF extraction")
 except ImportError:
     PYPDF2_AVAILABLE = False
+    print("[Debug] PyPDF2 not available - PDF extraction disabled")
 
 # JSON schema validation
 try:
     from jsonschema import validate, ValidationError
     JSONSCHEMA_AVAILABLE = True
+    print("[Debug] JSONSchema available for validation")
 except ImportError:
     JSONSCHEMA_AVAILABLE = False
+    print("[Debug] JSONSchema not available - Skipping validation")
 
 # Google Gemini client
 try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
+    print("[Debug] google-generativeai package loaded successfully")
 except ImportError:
     GEMINI_AVAILABLE = False
+    print("[Debug] google-generativeai package missing - Install via requirements.txt")
 
-DEFAULT_MODEL = "gemini-2.5-pro"  # Free model
+DEFAULT_MODEL = "gemini-1.5-pro"  # Your tested model
+FALLBACK_MODELS = ["gemini-1.5-pro", "gemini-pro"]  # Stable alternatives
 CHUNK_CHAR_SIZE = 3000
 CHUNK_OVERLAP = 200
 
-def retry_with_backoff(func, initial_delay: float = 1, max_delay: float = 60, max_retries: int = 6):
-    """Exponential backoff for API rate limits."""
-    def wrapper(*args, **kwargs):
-        num_retries = 0
-        delay = initial_delay
-        while True:
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                error_str = str(e).lower()
-                # Check for rate limit errors (429 or quota exceeded)
-                if "429" in error_str or "quota" in error_str or "rate" in error_str:
-                    num_retries += 1
-                    if num_retries > max_retries:
-                        raise Exception(f"Max retries ({max_retries}) exceeded: {e}")
-                    delay = min(delay * 2 * (1 + random.random()), max_delay)
-                    print(f"[Rate Limit] Retrying in {delay:.1f}s (attempt {num_retries}/{max_retries})")
-                    time.sleep(delay)
-                else:
-                    raise e
-    return wrapper
-
-# Schema
+# Schema (unchanged)
 SUMMARY_SCHEMA = {
     "type": "object",
     "properties": {
@@ -94,44 +80,77 @@ SUMMARY_SCHEMA = {
 }
 
 class FullPaperSummarizer:
-    def __init__(self, model: str = "gemini-2.5-pro", chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):
-        self.model = model
+    def __init__(self, model: str = DEFAULT_MODEL, chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):
         self.chunk_size = chunk_size
         self.max_chunks = max_chunks
         self.overlap = overlap
-        self.request_delay = 1  # 1s for free tier (15 RPM = 4s/req, but we're safe)
+        self.request_delay = 1
+        self.current_model = model  # Track current model
 
         if self.overlap >= self.chunk_size:
             self.overlap = int(self.chunk_size * 0.1)
-            print(f"[Summarizer] Adjusted overlap to {self.overlap}")
+            print(f"[Debug] Adjusted overlap to {self.overlap}")
 
         self.summary_schema = SUMMARY_SCHEMA
 
         # PDF flag
-        try:
-            import PyPDF2
-            self.pdf_enabled = True
-        except ImportError:
-            self.pdf_enabled = False
-            print("[Summarizer] PyPDF2 not available")
+        self.pdf_enabled = PYPDF2_AVAILABLE
 
-        # Gemini setup
+        # Gemini setup with fallback (no retries)
         self.gemini_model = None
         self.gemini_enabled = False
         
         api_key = api_key or st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
         
+        print(f"[Debug] API key loaded: {'Yes' if api_key else 'No (check secrets/env)'}")
+        print(f"[Debug] GEMINI_AVAILABLE: {GEMINI_AVAILABLE}")
+        
         if api_key and GEMINI_AVAILABLE:
             try:
                 genai.configure(api_key=api_key)
-                self.gemini_model = genai.GenerativeModel(self.model)
-                self.gemini_enabled = True
-                print(f"[Summarizer] Gemini enabled with {self.model} (free tier)")
+                # List all available models (debug visible in logs)
+                available = []
+                print("[Gemini Debug] Listing available models for generateContent:")
+                for m in genai.list_models():
+                    if 'generateContent' in m.supported_generation_methods:
+                        available.append(m.name)
+                        print(f"  - {m.name} ({m.display_name})")
+                
+                if not available:
+                    raise Exception("No models available - Enable Generative Language API in Cloud Console")
+                
+                # Try models one-by-one (no retries, just log failures)
+                models_to_try = [self.current_model] + FALLBACK_MODELS + available[:1]  # Default + fallbacks + first available
+                self.gemini_enabled = False
+                for attempt_model in models_to_try:
+                    print(f"[Gemini Debug] Trying model (one shot): {attempt_model}")
+                    try:
+                        self.gemini_model = genai.GenerativeModel(attempt_model)
+                        # Quick test call (only one API call)
+                        time.sleep(self.request_delay)
+                        test_response = self.gemini_model.generate_content("Test")
+                        if test_response and test_response.text and test_response.text.strip():
+                            self.current_model = attempt_model
+                            self.gemini_enabled = True
+                            print(f"[Summarizer] Success: Gemini enabled with {self.current_model} (test: '{test_response.text[:50]}...')")
+                            break
+                        else:
+                            raise Exception("Empty test response")
+                    except Exception as model_e:
+                        error_detail = str(model_e)[:100]
+                        print(f"[Gemini Debug] Model '{attempt_model}' failed: {error_detail}")
+                        if "404" in error_detail:
+                            print("[Gemini Debug] 404 tip: Model not available for your key/region - Continuing to fallback")
+                        continue
+                
+                if not self.gemini_enabled:
+                    print("[Summarizer] All models failed - Check logs above. Summaries will return error messages")
+                    
             except Exception as e:
-                print(f"[Summarizer] Gemini init error: {e}")
+                print(f"[Summarizer Init Error] {str(e)[:200]}")
                 self.gemini_enabled = False
         else:
-            print("[Summarizer] No Gemini key - Summaries will fail")
+            print("[Summarizer] Setup failed: No key or package - All summaries will fail with message")
 
         self.schema_loaded = True
 
@@ -155,44 +174,56 @@ class FullPaperSummarizer:
         return "AI/ML"
 
     def summarize_paper(self, paper: Dict[str, Any], use_full_text: bool = True, timeout: int = 120, query: str = "") -> Dict[str, Any]:
+        print(f"[Debug] Starting summary for paper: {paper.get('title', 'Untitled')[:50]}...")
         meta = self._prepare_meta(paper)
         if not meta:
-            return {"summary": "Summary couldn't be generated"}
+            return {"summary": "Failed: Invalid paper metadata"}
 
         extracted_text = None
         is_paywalled = False
         if use_full_text and self.pdf_enabled and paper.get('pdf_url'):
+            print("[Debug] Attempting PDF extraction...")
             extracted_text, is_paywalled = self._download_and_extract_pdf(paper['pdf_url'])
             if is_paywalled:
-                print(f"[Summarizer] Paywalled: {paper.get('title')}")
+                print(f"[Debug] PDF paywalled for: {paper.get('title')[:50]}")
                 extracted_text = None
+            elif extracted_text:
+                print(f"[Debug] PDF extracted: {len(extracted_text)} chars")
 
         # Try PDF summary
         if extracted_text:
             chunks = self._chunk_text(extracted_text)[:self.max_chunks]
+            print(f"[Debug] Generated {len(chunks)} chunks for PDF summary")
             chunk_summaries = self._chunk_and_summarize(chunks, meta, query=query)
             if chunk_summaries:
                 final_summary = self._compose_final_summary_from_chunks(meta, chunk_summaries, query=query)
                 if final_summary:
-                    print(f"[DEBUG] PDF summary keys: {list(final_summary.keys())}")
+                    print(f"[Debug] PDF summary success: Keys {list(final_summary.keys())}")
                     return final_summary
 
         # Try abstract summary
+        print("[Debug] Falling back to abstract summary...")
         if self.gemini_enabled:
             abstract_summary = self._summarize_abstract(meta, query=query)
             if abstract_summary:
-                print(f"[DEBUG] Abstract summary keys: {list(abstract_summary.keys())}")
+                print(f"[Debug] Abstract summary success: Keys {list(abstract_summary.keys())}")
                 return abstract_summary
+            else:
+                return {"summary": "Gemini API failed during abstract summary - Check logs for details"}
+        else:
+            return {"summary": "Gemini not enabled (init failed) - See logs: No key/package or model unavailable"}
 
-        # Fail explicitly (no conservative)
-        return {"summary": "Summary couldn't be generated"}
+        # Explicit fail
+        return {"summary": "Summary couldn't be generated - API unavailable"}
 
-    @retry_with_backoff
     def _gemini_call(self, prompt: str) -> str:
-        """Core Gemini API call with retry."""
-        if not self.gemini_enabled:
+        """Single API call (no retry). Logs error, returns empty on fail."""
+        print(f"[Debug] Making Gemini call with model '{self.current_model}': Prompt length {len(prompt)} chars")
+        if not self.gemini_enabled or not self.gemini_model:
+            print("[API Call Failed] Gemini not enabled - Skipping call")
             return ""
-        time.sleep(self.request_delay)
+        
+        time.sleep(self.request_delay)  # Rate limit safety (no retry)
         try:
             response = self.gemini_model.generate_content(
                 prompt,
@@ -201,16 +232,30 @@ class FullPaperSummarizer:
                     "max_output_tokens": 800
                 }
             )
-            return response.text.strip()
+            if response and response.text and response.text.strip():
+                result = response.text.strip()
+                print(f"[Debug] Gemini call success: Response length {len(result)} chars")
+                return result
+            else:
+                raise Exception("Empty or invalid response from Gemini")
         except Exception as e:
-            print(f"[Gemini Error] {e}")
-            raise e
+            error_msg = str(e)[:150]  # Truncate for logs
+            print(f"[API Call Failed] {error_msg}")
+            if "404" in error_msg.lower():
+                print("[API Call Failed] 404: Model '{self.current_model}' unavailable - Try fallback in init")
+            elif "429" in error_msg or "quota" in error_msg.lower():
+                print("[API Call Failed] Quota/rate limit - Wait and retry manually")
+            elif "401" in error_msg or "auth" in error_msg.lower():
+                print("[API Call Failed] Auth issue - Check GEMINI_API_KEY in secrets")
+            return ""  # Return empty to trigger failure message
 
     def _chunk_and_summarize(self, chunks: List[str], meta: Dict[str, Any], query: str = "") -> List[str]:
         chunk_summaries = []
         for i, chunk in enumerate(chunks):
             if len(chunk_summaries) >= self.max_chunks:
+                print(f"[Debug] Capped chunks at {self.max_chunks}")
                 break
+            print(f"[Debug] Summarizing chunk {i+1}/{len(chunks)}: {len(chunk)} chars")
             try:
                 prompt = (
                     f"Paper: {meta.get('title', 'Untitled')}\n"
@@ -219,17 +264,19 @@ class FullPaperSummarizer:
                     f"Use specific details/numbers from the text:\n\n{chunk[:2000]}"
                 )
                 summary = self._gemini_call(prompt)
-                if not summary:
-                    summary = f"Chunk {i} summary unavailable."
-                chunk_summaries.append(summary)
-                time.sleep(self.request_delay + 0.5)
+                if summary:
+                    chunk_summaries.append(summary)
+                    print(f"[Debug] Chunk {i+1} success: {len(summary)} chars")
+                else:
+                    print(f"[Debug] Chunk {i+1} failed - Skipping")
+                    chunk_summaries.append("Chunk summary unavailable due to API error")
             except Exception as e:
-                print(f"[Chunk {i} Error] {e}")
-                chunk_summaries.append(f"Chunk {i} error.")
+                print(f"[Chunk {i+1} Error] {str(e)[:100]}")
+                chunk_summaries.append("Chunk error due to API failure")
         return chunk_summaries
 
     def _prepare_meta(self, paper: Dict[str, Any]) -> Dict[str, Any]:
-        return {
+        meta = {
             "title": (paper.get("title") or "").strip(),
             "abstract": (paper.get("abstract") or "").strip(),
             "authors": paper.get("authors") or [],
@@ -239,22 +286,30 @@ class FullPaperSummarizer:
             "url": paper.get("url") or "",
             "full_text": paper.get("full_text")
         }
+        print(f"[Debug] Prepared meta: Title '{meta['title'][:50]}...', Abstract length {len(meta['abstract'])}")
+        return meta
 
     def _download_and_extract_pdf(self, pdf_url: str) -> Tuple[Optional[str], bool]:
+        print(f"[Debug] Downloading PDF: {pdf_url[:100]}...")
         try:
             headers = {"User-Agent": "research-assistant/1.0"}
             resp = requests.get(pdf_url, headers=headers, timeout=30, stream=True)
             if resp.status_code in (401, 403):
+                print("[Debug] PDF access denied (paywalled/auth)")
                 return None, True
             if resp.status_code != 200:
+                print(f"[Debug] PDF download failed: Status {resp.status_code}")
                 return None, True
             content_type = resp.headers.get("Content-Type", "").lower()
             content = resp.content
             if "html" in content_type or content.strip().startswith(b"<"):
+                print("[Debug] PDF URL returned HTML (paywalled/redirect)")
                 return None, True
             if "pdf" not in content_type and not content.startswith(b"%PDF"):
+                print("[Debug] Content not PDF")
                 return None, True
             if not PYPDF2_AVAILABLE:
+                print("[Debug] PyPDF2 missing - Can't extract")
                 return None, False
             try:
                 with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
@@ -263,27 +318,30 @@ class FullPaperSummarizer:
                 extracted_text = ""
                 with open(tmp_name, "rb") as fh:
                     reader = PyPDF2.PdfReader(fh)
-                    for page in reader.pages:
+                    for page_num, page in enumerate(reader.pages, 1):
                         try:
                             txt = page.extract_text() or ""
-                        except:
-                            txt = ""
-                        if txt:
-                            extracted_text += txt + "\n\n"
+                            if txt.strip():
+                                extracted_text += txt + "\n\n"
+                        except Exception as page_e:
+                            print(f"[Debug] Page {page_num} extract error: {str(page_e)[:50]}")
                 try:
                     os.unlink(tmp_name)
                 except:
                     pass
-                return extracted_text.strip() if extracted_text.strip() else None, False
+                result = extracted_text.strip() if extracted_text.strip() else None
+                print(f"[Debug] PDF extraction: {len(extracted_text)} chars total")
+                return result, False
             except Exception as e:
-                print(f"[PDF Parse Error] {e}")
+                print(f"[PDF Parse Error] {str(e)[:100]}")
                 return None, True
         except Exception as e:
-            print(f"[PDF Download Error] {e}")
+            print(f"[PDF Download Error] {str(e)[:100]}")
             return None, True
 
     def _chunk_text(self, text: str) -> List[str]:
         if not text:
+            print("[Debug] No text to chunk")
             return []
         text = text.strip()
         chunks = []
@@ -296,13 +354,14 @@ class FullPaperSummarizer:
             start += step
             if len(chunks) >= self.max_chunks:
                 break
-        print(f"[Chunking] {len(chunks)} chunks (capped at {self.max_chunks})")
+        print(f"[Debug] Chunking: {len(chunks)} chunks created (cap {self.max_chunks})")
         return chunks
 
-    @retry_with_backoff
     def _compose_final_summary_from_chunks(self, meta: Dict[str, Any], chunk_summaries: List[str], query: str = "") -> Optional[Dict[str, Any]]:
+        print(f"[Debug] Composing final summary from {len(chunk_summaries)} chunk summaries")
         aggregated = "\n\n---\n\n".join(chunk_summaries)
         if not aggregated:
+            print("[Debug] No chunks to aggregate")
             return None
         
         prompt = (
@@ -337,27 +396,33 @@ class FullPaperSummarizer:
         
         try:
             json_str = self._gemini_call(prompt)
-            # Clean potential code block markers (raw string to avoid escape issues)
-            json_str = json_str.replace("```json", "").replace("```", "").strip()
+            if not json_str:
+                print("[Debug] Composition call failed - Returning empty")
+                return None
+            # Clean potential code block markers
+            json_str = json_str.replace("``````", "").strip()
+            print(f"[Debug] Raw JSON response length: {len(json_str)}")
             
             final_summary = json.loads(json_str)
             if JSONSCHEMA_AVAILABLE:
                 try:
                     validate(instance=final_summary, schema=self.summary_schema)
+                    print("[Debug] JSON validated successfully")
                 except ValidationError as e:
-                    print(f"[JSON Validation] {e}")
+                    print(f"[Debug] JSON validation warning: {str(e)[:100]}")
             return final_summary
         except json.JSONDecodeError as e:
-            print(f"[JSON Parse Error] {e}\nResponse: {json_str[:200]}")
+            print(f"[JSON Parse Error] {str(e)[:100]}\nSample response: {json_str[:200]}")
             return None
         except Exception as e:
-            print(f"[Composition Error] {e}")
+            print(f"[Composition Error] {str(e)[:100]}")
             return None
 
-    @retry_with_backoff
     def _summarize_abstract(self, meta: Dict[str, Any], query: str = "") -> Optional[Dict[str, Any]]:
         abstract = meta.get('abstract', '')
+        print(f"[Debug] Abstract summary: Length {len(abstract)} chars")
         if not abstract or not self.gemini_enabled:
+            print("[Debug] No abstract or Gemini disabled - Skipping")
             return None
         
         prompt = (
@@ -389,35 +454,46 @@ class FullPaperSummarizer:
         
         try:
             json_str = self._gemini_call(prompt)
+            if not json_str:
+                print("[Debug] Abstract call failed")
+                return None
             # Clean potential code block markers
-            json_str = json_str.replace("```json", "").replace("```", "").strip()
+            json_str = json_str.replace("``````", "").strip()
             
             summary = json.loads(json_str)
+            print(f"[Debug] Abstract summary parsed: Keys {list(summary.keys())}")
             return summary
         except Exception as e:
-            print(f"[Abstract Summary Error] {e}")
+            print(f"[Abstract Summary Error] {str(e)[:100]}")
             return None
 
     def _validate_parsed(self, parsed: Dict[str, Any]) -> bool:
         if not isinstance(parsed, dict):
+            print("[Debug] Validation: Not a dict")
             return False
         required = ["title", "abstract", "authors", "source", "url", "results_and_key_findings", "limitations_and_future_work"]
         for k in required:
             if k not in parsed:
+                print(f"[Debug] Validation: Missing required key {k}")
                 return False
         if not isinstance(parsed.get("authors"), list):
+            print("[Debug] Validation: Authors not list")
             return False
         if not isinstance(parsed.get("results_and_key_findings"), list):
+            print("[Debug] Validation: Results not list")
             return False
         if not isinstance(parsed.get("limitations_and_future_work"), list):
+            print("[Debug] Validation: Limitations not list")
             return False
         if JSONSCHEMA_AVAILABLE:
             try:
                 validate(instance=parsed, schema=SUMMARY_SCHEMA)
-            except:
+                print("[Debug] Full schema validation passed")
+            except Exception as e:
+                print(f"[Debug] Schema validation failed: {str(e)[:100]}")
                 return False
         return True
 
     def conservative_summary(self, meta: Dict[str, Any], query: str = "") -> Dict[str, Any]:
-        """Not used - we fail explicitly instead."""
-        return {"summary": "Summary couldn't be generated"}
+        """Not used - Explicit fail only."""
+        return {"summary": "Summary couldn't be generated - API unavailable"}
