@@ -1256,8 +1256,8 @@ with st.sidebar:
             
             # Store results
             st.session_state.papers_data = papers
-            st.session_state.full_text_papers = fulltextpapers
-            st.session_state.suggested_papers = suggestedpapers
+            st.session_state.full_text_papers = full_text_papers
+            st.session_state.suggested_papers = suggested_papers
             st.session_state.clusters = clusters
             st.session_state.processing = False
                 
