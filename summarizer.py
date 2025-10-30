@@ -2,9 +2,9 @@
 summarizer.py
 
 Full-paper summarizer using Google Gemini API (free tier):
-- Singleton-friendly: Init once for all papers.
-- Minimal calls: No test prompt, limited fallbacks.
-- On fail: Explicit message with error (no retries).
+- Auto-picks available model (e.g., gemini-2.5-pro from logs).
+- No calls on skips; single init only.
+- On fail: Explicit message (no quota waste).
 """
 
 import os
@@ -44,8 +44,8 @@ except ImportError:
     GEMINI_AVAILABLE = False
     print("[Debug] google-generativeai missing - Add to requirements.txt")
 
-DEFAULT_MODEL = "gemini-1.5-pro"  # FIXED: Stable from dashboard
-FALLBACK_MODEL = "gemini-pro"  # Only one fallback
+# Defaults (your logs show 2.5 series available)
+PREFERRED_MODELS = ["gemini-2.5-pro", "gemini-2.0-flash", "gemini-pro-latest"]  # From logs
 CHUNK_CHAR_SIZE = 3000
 CHUNK_OVERLAP = 200
 
@@ -71,17 +71,27 @@ SUMMARY_SCHEMA = {
 }
 
 class FullPaperSummarizer:
-    def __init__(self, model: str = DEFAULT_MODEL, chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):
+    _instance = None  # Singleton enforcement (prevents multiple inits)
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, chunk_size: int = 3000, max_chunks: int = 5, overlap: int = 200, api_key: str = None):
+        if hasattr(self, 'initialized'):  # Skip re-init
+            return
+        self.initialized = True
         self.chunk_size = chunk_size
         self.max_chunks = max_chunks
         self.overlap = overlap
-        self.current_model = model
-        self.request_delay = 2  # Slower for quota (15 RPM)
+        self.current_model = None  # FIXED: None until success
+        self.request_delay = 2  # Slower for quota
 
         self.summary_schema = SUMMARY_SCHEMA
         self.pdf_enabled = PYPDF2_AVAILABLE
 
-        # Gemini setup (minimal calls)
+        # Gemini setup (auto-pick from available)
         self.gemini_model = None
         self.gemini_enabled = False
         
@@ -97,34 +107,44 @@ class FullPaperSummarizer:
                 available = []
                 for m in genai.list_models():
                     if 'generateContent' in m.supported_generation_methods:
-                        available.append(m.name)
+                        model_name = m.name.split('/')[-1]  # e.g., "gemini-2.5-pro"
+                        available.append(model_name)
                         print(f"  - {m.name}")
 
                 if not available:
                     raise Exception("No models")
 
-                # Try only 2 models (no test prompt to save quota)
-                models_to_try = [self.current_model, FALLBACK_MODEL]
-                for attempt_model in models_to_try:
-                    if attempt_model not in available:
-                        print(f"[Gemini Debug] Skipping unavailable model: {attempt_model}")
-                        continue
-                    try:
-                        print(f"[Gemini Debug] Instantiating {attempt_model}")
-                        self.gemini_model = genai.GenerativeModel(attempt_model)
-                        self.current_model = attempt_model
-                        self.gemini_enabled = True
-                        print(f"[Summarizer] Enabled with {self.current_model} (no test call to save quota)")
+                # FIXED: Auto-pick first preferred/available (no skips)
+                selected_model = None
+                for pref in PREFERRED_MODELS:
+                    if pref in available:
+                        selected_model = pref
                         break
-                    except Exception as e:
-                        error = str(e)[:100]
-                        print(f"[Gemini Debug] {attempt_model} failed: {error}")
-                        if "404" in error.lower():
-                            print("[Gemini Debug] 404: Use dashboard models like gemini-1.5-pro")
-                        continue
+                if not selected_model:
+                    # Fallback to first pro/flash
+                    for mod in available:
+                        if 'pro' in mod or 'flash' in mod:
+                            selected_model = mod
+                            break
+                if not selected_model:
+                    selected_model = available[0]  # Last resort
+
+                print(f"[Gemini Debug] Selected available model: {selected_model}")
+
+                # Instantiate (no test - saves quota)
+                try:
+                    self.gemini_model = genai.GenerativeModel(selected_model)
+                    self.current_model = selected_model
+                    self.gemini_enabled = True
+                    print(f"[Summarizer] Enabled with {self.current_model} (auto-selected from available)")
+                except Exception as e:
+                    error = str(e)[:100]
+                    print(f"[Gemini Debug] Selected model failed: {error}")
+                    self.gemini_enabled = False
 
                 if not self.gemini_enabled:
-                    print("[Summarizer] All models failed - Enable via logs")
+                    print("[Summarizer] No working model - Check key/project quotas")
+
             except Exception as e:
                 print(f"[Summarizer Init Error] {str(e)[:150]}")
         else:
@@ -152,39 +172,38 @@ class FullPaperSummarizer:
                 if final:
                     return final
 
-        if self.gemini_enabled:
+        if self.gemini_enabled and self.current_model:
             abstract_summary = self._summarize_abstract(meta, query)
             if abstract_summary:
                 return abstract_summary
             else:
-                return {"summary": "API call failed (check logs: quota/404)"}
-        return {"summary": f"Gemini not enabled: {self.gemini_enabled} - Logs: key/package/model issue"}
+                return {"summary": "API call failed (check logs: quota/empty response)"}
+        return {"summary": f"Gemini not enabled: Model '{self.current_model}' unavailable - Use AI Studio models"}
 
     def _gemini_call(self, prompt: str) -> str:
-        print(f"[Debug] Call with {self.current_model}: {len(prompt)} chars")
-        if not self.gemini_enabled:
+        if not self.gemini_enabled or not self.current_model:
+            print("[API Failed] No model enabled - Skipping call")
             return ""
+        print(f"[Debug] Call with {self.current_model}: {len(prompt)} chars")
         time.sleep(self.request_delay)
         try:
             response = self.gemini_model.generate_content(
                 prompt,
                 generation_config={"temperature": 0.3, "max_output_tokens": 800}
             )
-            if response.text.strip():
+            if response.text and response.text.strip():
                 print("[Debug] Call success")
                 return response.text.strip()
             raise Exception("Empty response")
         except Exception as e:
             error = str(e)[:100].lower()
             print(f"[API Failed] {error}")
-            if "429" in error or "quota" in error:
-                print("[API Failed] Rate limit - Wait 1min or reduce papers")
-            elif "404" in error:
-                print("[API Failed] Model unavailable")
+            if "404" in error:
+                print("[API Failed] Model unavailable - Regenerate key")
+            elif "429" in error or "quota" in error:
+                print("[API Failed] Rate limit - Wait/reduce papers")
             return ""
 
-    # [Other methods unchanged: _chunk_and_summarize, _prepare_meta, _download_and_extract_pdf, _chunk_text, _compose_final_summary_from_chunks, _summarize_abstract, _infer_domain, _validate_parsed, conservative_summary]
-    # Copy from previous full code if needed – they're identical to save space.
     def _chunk_and_summarize(self, chunks: List[str], meta: Dict[str, Any], query: str = "") -> List[str]:
         summaries = []
         for i, chunk in enumerate(chunks[:self.max_chunks]):
@@ -205,14 +224,12 @@ class FullPaperSummarizer:
         }
 
     def _infer_domain(self, abstract: str, query: str) -> str:
-        # Simplified from previous
         text = (abstract or query or "").lower()
         if any(kw in text for kw in ["stock", "financial", "prediction"]):
             return "AI/ML/Finance"
         return "AI/ML"
 
     def _download_and_extract_pdf(self, pdf_url: str) -> Tuple[Optional[str], bool]:
-        # Simplified from previous (full code as before)
         try:
             resp = requests.get(pdf_url, timeout=30)
             if resp.status_code != 200 or not resp.content.startswith(b"%PDF"):
@@ -247,8 +264,7 @@ class FullPaperSummarizer:
     def _compose_final_summary_from_chunks(self, meta: Dict[str, Any], chunk_summaries: List[str], query: str = "") -> Optional[Dict[str, Any]]:
         aggregated = "\n\n".join(chunk_summaries)
         prompt = f"""Metadata: Title {meta['title']}, Abstract {meta['abstract'][:1000]}...\nChunks: {aggregated[:4000]}
-Output JSON only:
-{json.dumps(SUMMARY_SCHEMA['properties'], indent=2)}"""
+Output JSON only (use schema below for keys):\n{json.dumps(SUMMARY_SCHEMA['properties'], indent=2)}"""
         json_str = self._gemini_call(prompt)
         if not json_str:
             return None
@@ -264,7 +280,7 @@ Output JSON only:
         if not abstract:
             return None
         prompt = f"""Query: {query}\nTitle: {meta['title']}\nAbstract: {abstract[:2500]}
-JSON summary (schema as above)"""
+JSON summary (use schema for keys, extract sections from abstract)"""
         json_str = self._gemini_call(prompt)
         if not json_str:
             return None
@@ -275,7 +291,6 @@ JSON summary (schema as above)"""
             return None
 
     def _validate_parsed(self, parsed: Dict[str, Any]) -> bool:
-        # Simplified
         required = ["title", "abstract", "authors", "source", "url", "results_and_key_findings", "limitations_and_future_work"]
         for k in required:
             if k not in parsed:
