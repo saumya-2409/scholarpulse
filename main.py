@@ -56,7 +56,13 @@ try:
 except ImportError:
     BEAUTIFULSOUP_AVAILABLE = False
 
-#  Ž¨ BEAUTIFUL DESIGN CSS (PRESERVED)
+# At top of main.py (after imports)
+if "summarizer" not in st.session_state:
+    from summarizer import FullPaperSummarizer
+    st.session_state.summarizer = FullPaperSummarizer()  # Init once
+    print("[App Debug] Summarizer singleton created")
+
+# BEAUTIFUL DESIGN CSS (PRESERVED)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
@@ -1218,31 +1224,26 @@ with st.sidebar:
            
             with st.spinner("Generating enhanced AI summaries..."):
                 starttime = time.time()
-                summarizer = FullPaperSummarizer(model="gpt-4o-mini",chunk_size=3000,max_chunks=5,overlap=200,api_key=None)  # Use your OpenAI model; set OPENAI_API_KEY env var
-                fulltextpapers = []
-                suggestedpapers = []
+                print("[App Debug] Using singleton summarizer for summaries")
+                full_text_papers = []
+                suggested_papers = []
                 for paper in papers:
-                    isfulltext = bool(paper.get('pdf_available') or paper.get('full_text') or paper.get('extracted_content'))
-                    # Generate AI summary using LLM with query and full-text check
-                    ai_summary = summarizer.summarize_paper(
-                        paper, 
-                        use_full_text=isfulltext, 
-                        timeout=120, 
-                        query=query  # Pass query for relevance
-                    )
+                    is_full_text = bool(paper.get('pdf_available') or paper.get('full_text') or paper.get('extracted_content'))
+                    # ... (keep any pre-summary logic, e.g., domain inference if present)
+                    
+                    # Use singleton summarizer (Gemini: passes query for relevance)
+                    ai_summary = st.session_state.summarizer.summarize_paper(paper, use_full_text=is_full_text, query=query)  # FIXED: Singleton + no timeout (not needed for Gemini)
+                    
                     if ai_summary and isinstance(ai_summary, dict):
                         paper['ai_summary'] = ai_summary
-                        if isfulltext:
-                            fulltextpapers.append(paper)
-                        else:
-                            suggestedpapers.append(paper)
+                        summary_time = time.time() - start_time  # Keep timing if present
                     else:
-                        # Fallback: No conservative summary - just a simple placeholder
-                        paper['ai_summary'] = {"summary": "Summary couldn't be extracted"}
-                        if isfulltext:
-                            fulltextpapers.append(paper)
-                        else:
-                            suggestedpapers.append(paper)
+                        paper['ai_summary'] = {"summary": "Summary failed - Check logs for Gemini errors"}
+                    
+                    if is_full_text:
+                        full_text_papers.append(paper)
+                    else:
+                        suggested_papers.append(paper)
                 summarytime = time.time() - starttime
                 st.success(f"Generated {len(papers)} enhanced summaries in {summarytime:.1f}s")
 
