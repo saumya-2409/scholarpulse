@@ -198,7 +198,7 @@ class FullPaperSummarizer:
                 prompt,
                 generation_config={
                     "temperature": 0.3,
-                    "max_output_tokens": 800  # Enough for detailed JSON
+                    "max_output_tokens": 800
                 }
             )
             return response.text.strip()
@@ -315,12 +315,12 @@ class FullPaperSummarizer:
             f"URL: {meta.get('url', '')}\n"
             f"Abstract: {meta.get('abstract', '')}\n\n"
             f"CHUNK SUMMARIES (extract facts from these):\n{aggregated[:5000]}\n\n"
-            "Output ONLY valid JSON with these keys (no extra text):\n"
+            "Output ONLY valid JSON with these keys (no extra text, no markdown code blocks):\n"
             "{\n"
             '  "title": "string (from metadata)",\n'
             '  "abstract": "string (from metadata)",\n'
             '  "authors": ["array of strings"],\n'
-            '  "year": integer or null,\n'
+            '  "year": null or integer,\n'
             '  "domain": "string like AI/ML/Finance",\n'
             '  "source": "string (from metadata)",\n'
             '  "url": "string (from metadata)",\n'
@@ -328,7 +328,7 @@ class FullPaperSummarizer:
             '  "motivation": "string or null (why important, query-tied)",\n'
             '  "approach": "string or null (methods/techniques from chunks, 2-4 sentences)",\n'
             '  "experiments_and_evaluation": "string or null (datasets/metrics from chunks)",\n'
-            '  "results_and_key_findings": ["array of 3-5 unique findings with metrics, e.g. \'92% accuracy for stock prediction\'"],\n'
+            '  "results_and_key_findings": ["array of 3-5 unique findings with metrics, e.g. 92 percent accuracy for stock prediction"],\n'
             '  "limitations_and_future_work": ["array of 2-4 limitations/gaps from chunks"],\n'
             '  "reusability_practical_value": "string or null (1-2 sentences on applications for query domain)"\n'
             "}\n"
@@ -337,11 +337,8 @@ class FullPaperSummarizer:
         
         try:
             json_str = self._gemini_call(prompt)
-            # Clean markdown code blocks if present
-            if "```
-                json_str = json_str.split("```json").split("```
-            elif "```" in json_str:
-                json_str = json_str.split("``````")[0].strip()
+            # Clean potential code block markers (raw string to avoid escape issues)
+            json_str = json_str.replace("```json", "").replace("```", "").strip()
             
             final_summary = json.loads(json_str)
             if JSONSCHEMA_AVAILABLE:
@@ -371,12 +368,12 @@ class FullPaperSummarizer:
             f"Year: {meta.get('year')}\n"
             f"Abstract: {abstract[:2500]}\n\n"
             "Summarize in JSON (same schema as before). Extract problem, approach, results from abstract. "
-            "Output valid JSON only (no extra text):\n"
+            "Output ONLY valid JSON (no markdown code blocks, no extra text):\n"
             "{\n"
             '  "title": "...",\n'
             '  "abstract": "...",\n'
             '  "authors": [...],\n'
-            '  "year": ...,\n'
+            '  "year": null or integer,\n'
             '  "domain": "...",\n'
             '  "source": "...",\n'
             '  "url": "...",\n'
@@ -392,10 +389,8 @@ class FullPaperSummarizer:
         
         try:
             json_str = self._gemini_call(prompt)
-            if "```
-                json_str = json_str.split("```json").split("```
-            elif "```" in json_str:
-                json_str = json_str.split("``````")[0].strip()
+            # Clean potential code block markers
+            json_str = json_str.replace("```json", "").replace("```", "").strip()
             
             summary = json.loads(json_str)
             return summary
@@ -423,7 +418,6 @@ class FullPaperSummarizer:
                 return False
         return True
 
-    # NO conservative_summary - just fail with message
     def conservative_summary(self, meta: Dict[str, Any], query: str = "") -> Dict[str, Any]:
         """Not used - we fail explicitly instead."""
         return {"summary": "Summary couldn't be generated"}
