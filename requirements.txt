@@ -26,6 +26,7 @@ PyMuPDF          # pip install pymupdf
 
 # LLM Summarization
 openai>=1.0.0  # For gpt-4o-mini calls
+google-generativeai>=0.3.0
 
 # Clustering & Embeddings
 scikit-learn>=1.3.0
