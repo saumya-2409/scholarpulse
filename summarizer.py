@@ -174,6 +174,7 @@ class FullPaperSummarizer:
                     return final
 
         if self.gemini_enabled and self.current_model:
+            print("-----")
             abstract_summary = self._summarize_abstract(meta, query)
             if abstract_summary:
                 return abstract_summary
