@@ -1044,20 +1044,31 @@ def render_paper_ui(paper: dict):
         col1, col2, col3 = st.columns(3)
 
         working_url = paper.get('working_url') or paper.get('url')
+        access_type = paper.get('access_type', 'direct')
+        
+        button_label = (
+            "Access Paper (PDF)"
+            if access_type == 'direct_pdf' 
+            else "Access Full Paper"
+        )
+
         if working_url:
-            access_type = paper.get('access_type', 'direct')
-            button_label = "Access Paper (PDF)" if access_type == 'direct_pdf' else "Access Full Paper"
-            
             with col1:
-                if st.button(button_label, key=f"btn_{working_url}"):
-                    webbrowser.open_new_tab(working_url)
+                st.link_button(
+                    button_label, 
+                    working_url,
+                    user_container_width=True
+                )
 
         # Direct PDF fallback
         pdf_url = paper.get('pdf_url')
         if pdf_url and pdf_url != working_url:
             with col2:
-                if st.button("Direct PDF Download", key=f"pdf_{paper.get('id', 'unknown')}"):
-                    webbrowser.open_new_tab(pdf_url)
+                st.link_button(
+                    "Direct PDF Download", 
+                    pdf_url,
+                    user_container_width=True
+                )
 
 def render_suggested_paper(paper: Dict):
     """Render truly restricted paper card"""
