@@ -1,0 +1,43 @@
+# Requirements for FAST Research Assistant
+
+# Core Streamlit app
+streamlit>=1.28.0
+
+# Data handling & visualization
+pandas>=2.0.0
+numpy>=1.24.0
+plotly>=5.18.0
+
+# Networking & parsing
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Utilities
+python-dateutil>=2.8.0
+
+# arXiv integration
+arxiv>=1.4.0
+
+tqdm
+
+# PDF Handling (for full-text extraction)
+PyPDF2>=3.0.0  # Used in summarizer.py; PyMuPDF optional but not active
+PyMuPDF          # pip install pymupdf
+
+# LLM Summarization
+#openai>=1.0.0  # For gpt-4o-mini calls
+
+# Clustering & Embeddings
+scikit-learn>=1.3.0
+sentence-transformers>=2.2.0  # For paper clustering
+
+# Validation & Utils
+jsonschema>=4.0.0  # For summary schema
+python-dateutil>=2.8.0
+
+# Optional: Better PDF (if switching from PyPDF2)
+# PyMuPDF>=1.23.0  # Uncomment if using fitz for extraction
+
+tenacity>=8.0.0  # For exponential backoff retries (optional; custom impl below avoids it)
+
+google-generativeai>=0.8.3
