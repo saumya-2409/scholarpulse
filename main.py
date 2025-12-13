@@ -1057,7 +1057,7 @@ def render_paper_ui(paper: dict):
                 st.link_button(
                     button_label, 
                     working_url,
-                    user_container_width=True
+                    use_container_width=True
                 )
 
         # Direct PDF fallback
@@ -1067,7 +1067,7 @@ def render_paper_ui(paper: dict):
                 st.link_button(
                     "Direct PDF Download", 
                     pdf_url,
-                    user_container_width=True
+                    use_container_width=True
                 )
 
 def render_suggested_paper(paper: Dict):
