@@ -282,7 +282,8 @@ class FullPaperSummarizer:
         self.gemini_enabled = False
         self.quota_exceeded = False
 
-        api_key = api_key or st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+        api_key = api_key or st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY") or st.secrets["GEMINI
+        _API_KEY"]
         print(f"[Gemini Debug] Key loaded: {'Yes' if api_key else 'No'}")
         print(f"[Gemini Debug] Package: {GEMINI_AVAILABLE}")
 
