@@ -1,0 +1,45 @@
+# ScholarPulse backend dependencies
+
+# API
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Configuration
+python-dotenv
+
+# Networking & parsing
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+arxiv>=1.4.0
+
+# Data & numerical processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Utilities
+python-dateutil>=2.8.0
+tqdm
+nltk
+
+# PDF extraction
+PyPDF2>=3.0.0
+PyMuPDF
+
+# Clustering & embeddings
+scikit-learn>=1.3.0
+umap-learn>=0.5.0
+sentence-transformers
+
+# Validation
+jsonschema>=4.0.0
+
+# LLM / research utilities
+groq
+keybert
+tenacity>=8.0.0
+
+# Authentication
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator
